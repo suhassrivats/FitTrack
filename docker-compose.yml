@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - sqlite_data:/app/instance
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+

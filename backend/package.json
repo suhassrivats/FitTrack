@@ -1,0 +1,16 @@
+{
+  "name": "fittrack-backend",
+  "version": "1.0.0",
+  "description": "FitTrack Backend - AWS Lambda deployment",
+  "scripts": {
+    "deploy": "serverless deploy --stage prod",
+    "deploy:dev": "serverless deploy --stage dev",
+    "logs": "serverless logs -f api --tail",
+    "remove": "serverless remove --stage prod"
+  },
+  "devDependencies": {
+    "serverless-python-requirements": "^6.0.0"
+  }
+}
+
+

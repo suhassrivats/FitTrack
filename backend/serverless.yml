@@ -1,0 +1,63 @@
+service: fittrack-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  accountId: '463470963617'
+  
+  # Environment variables
+  environment:
+    DATABASE_URL: ${env:DATABASE_URL, ''}
+    SECRET_KEY: ${env:SECRET_KEY, ''}
+    JWT_SECRET_KEY: ${env:JWT_SECRET_KEY, ''}
+    CORS_ORIGINS: ${env:CORS_ORIGINS, '*'}
+    FLASK_ENV: production
+  
+  # IAM role for Lambda (to access RDS if in VPC)
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterface
+          Resource: '*'
+  
+  # VPC configuration (if RDS is in VPC)
+  # Uncomment and update if your RDS is in a VPC:
+  # vpc:
+  #   securityGroupIds:
+  #     - sg-xxxxx  # Your Lambda security group
+  #   subnetIds:
+  #     - subnet-xxxxx  # Private subnets
+  #     - subnet-yyyyy
+
+functions:
+  api:
+    handler: lambda_handler.handler
+    timeout: 30
+    memorySize: 512
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+      - httpApi:
+          path: /
+          method: ANY
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    zip: true
+    slim: true
+    strip: false
+
+

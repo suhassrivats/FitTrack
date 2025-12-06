@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "FitTrack",
+    "slug": "fittrack-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#102216"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fittrack.mobile"
+    },
+    "android": {
+      "package": "com.fittrack.mobile"
+    },
+    "web": {
+      "bundler": "webpack"
+    }
+  }
+}
+
