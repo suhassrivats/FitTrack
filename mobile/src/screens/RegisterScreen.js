@@ -224,7 +224,10 @@ const RegisterScreen = ({ navigation }) => {
             />
 
             {isLogin && (
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => navigation.navigate('ForgotPassword')}
+              >
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
             )}
@@ -240,10 +243,6 @@ const RegisterScreen = ({ navigation }) => {
               <TouchableOpacity style={styles.socialButton}>
                 <Icon name="google" size={20} color={colors.textPrimary} />
                 <Text style={styles.socialButtonText}>Continue with Google</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <Icon name="apple" size={20} color={colors.textPrimary} />
-                <Text style={styles.socialButtonText}>Continue with Apple</Text>
               </TouchableOpacity>
             </View>
 

@@ -260,7 +260,7 @@ const DashboardScreen = ({ navigation, route }) => {
       {/* Floating Action Button */}
       <View style={styles.fabContainer}>
         <Button
-          title="Start Empty Workout"
+          title="Start Cross-Training"
           onPress={() => navigation.navigate('LogWorkout')}
           icon={<Icon name="plus" size={20} color="#102216" style={{ marginRight: 8 }} />}
           style={styles.fab}

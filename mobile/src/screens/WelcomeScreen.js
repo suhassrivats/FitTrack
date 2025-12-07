@@ -83,9 +83,6 @@ const WelcomeScreen = ({ navigation }) => {
               <TouchableOpacity style={styles.socialButton}>
                 <Icon name="google" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <Icon name="apple" size={24} color={colors.textPrimary} />
-              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>

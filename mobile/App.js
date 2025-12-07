@@ -9,6 +9,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 // Import screens
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import LogWorkoutScreen from './src/screens/LogWorkoutScreen';
@@ -178,6 +179,7 @@ export default function App() {
             <>
               <Stack.Screen name="Welcome" component={WelcomeScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             </>
           ) : (
             <>
