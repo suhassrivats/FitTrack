@@ -26,7 +26,10 @@ import ClassDetailsScreen from './src/screens/ClassDetailsScreen';
 import LeaderboardScreen from './src/screens/LeaderboardScreen';
 import AssignedWorkoutsScreen from './src/screens/AssignedWorkoutsScreen';
 import AssignWorkoutScreen from './src/screens/AssignWorkoutScreen';
+import EditAssignedWorkoutScreen from './src/screens/EditAssignedWorkoutScreen';
 import LogAssignedWorkoutScreen from './src/screens/LogAssignedWorkoutScreen';
+import EditProfileScreen from './src/screens/EditProfileScreen';
+import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 
 // Import API configuration
 import { setAuthToken } from './src/services/api';
@@ -191,6 +194,9 @@ export default function App() {
               <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
               <Stack.Screen name="AssignedWorkouts" component={AssignedWorkoutsScreen} />
               <Stack.Screen name="AssignWorkout" component={AssignWorkoutScreen} />
+              <Stack.Screen name="EditAssignedWorkout" component={EditAssignedWorkoutScreen} />
+              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
             </>
           )}
         </Stack.Navigator>

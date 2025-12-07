@@ -45,7 +45,7 @@ api.interceptors.request.use(
 // Handle auth errors
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.config.url, response.status);
+    console.log('API Response:', response.config.method?.toUpperCase(), response.config.url, response.status);
     return response;
   },
   async (error) => {
@@ -127,9 +127,14 @@ export const classAPI = {
   joinClass: (data) => api.post('/classes/join', data),
   getMembers: (id) => api.get(`/classes/${id}/members`),
   removeMember: (classId, studentId) => api.delete(`/classes/${classId}/members/${studentId}`),
+  getJoinRequests: (classId) => api.get(`/classes/${classId}/join-requests`),
+  acceptJoinRequest: (classId, requestId) => api.post(`/classes/${classId}/join-requests/${requestId}/accept`),
+  rejectJoinRequest: (classId, requestId) => api.post(`/classes/${classId}/join-requests/${requestId}/reject`),
   assignWorkout: (classId, data) => api.post(`/classes/${classId}/assign-workout`, data),
   getAssignedWorkouts: (classId) => api.get(`/classes/${classId}/assigned-workouts`),
   getAssignedWorkout: (classId, workoutId) => api.get(`/classes/${classId}/assigned-workouts/${workoutId}`),
+  updateAssignedWorkout: (classId, workoutId, data) => api.put(`/classes/${classId}/assigned-workouts/${workoutId}`, data),
+  deleteAssignedWorkout: (classId, workoutId) => api.delete(`/classes/${classId}/assigned-workouts/${workoutId}`),
   completeWorkout: (classId, workoutId, data) => api.post(`/classes/${classId}/assigned-workouts/${workoutId}/complete`, data),
   getLeaderboard: (classId) => api.get(`/classes/${classId}/leaderboard`),
   getClassStats: (classId) => api.get(`/classes/${classId}/stats`),

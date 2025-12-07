@@ -128,12 +128,12 @@ const ProfileScreen = ({ navigation }) => {
             <MenuItem
               icon="account-outline"
               title="Edit Profile"
-              onPress={() => {}}
+              onPress={() => navigation.navigate('EditProfile', { profile })}
             />
             <MenuItem
               icon="lock-outline"
               title="Change Password"
-              onPress={() => {}}
+              onPress={() => navigation.navigate('ChangePassword')}
             />
             <MenuItem
               icon="crown-outline"

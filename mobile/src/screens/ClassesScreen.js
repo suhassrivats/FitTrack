@@ -10,11 +10,12 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { globalStyles } from '../styles/globalStyles';
 import colors from '../styles/colors';
 import Button from '../components/Button';
-import { API_URL } from '../services/api';
+import { classAPI } from '../services/api';
 
 const ClassesScreen = ({ navigation }) => {
   const [classes, setClasses] = useState([]);
@@ -25,20 +26,42 @@ const ClassesScreen = ({ navigation }) => {
   const [joinCode, setJoinCode] = useState('');
   const [className, setClassName] = useState('');
   const [classDescription, setClassDescription] = useState('');
-  const [userRole, setUserRole] = useState('instructor'); // In production, get from auth
+  const [userRole, setUserRole] = useState('student'); // Default to student
 
   useEffect(() => {
-    loadClasses();
+    const initialize = async () => {
+      await loadUserRole();
+      loadClasses();
+    };
+    initialize();
   }, []);
+
+  const loadUserRole = async () => {
+    try {
+      const userStr = await AsyncStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        console.log('Loaded user role:', user.role);
+        setUserRole(user.role || 'student');
+      } else {
+        console.log('No user found in AsyncStorage');
+      }
+    } catch (error) {
+      console.error('Error loading user role:', error);
+    }
+  };
 
   const loadClasses = async () => {
     try {
-      const response = await fetch(`${API_URL}/classes`);
-      const data = await response.json();
-      setClasses(data.classes || []);
+      const response = await classAPI.getClasses();
+      console.log('Classes API response:', response.data);
+      const classesList = response.data.classes || [];
+      console.log('Classes list:', classesList);
+      setClasses(classesList);
     } catch (error) {
       console.error('Error loading classes:', error);
-      Alert.alert('Error', 'Failed to load classes');
+      console.error('Error response:', error.response?.data);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to load classes');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -57,24 +80,17 @@ const ClassesScreen = ({ navigation }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/classes/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ join_code: joinCode.toUpperCase() }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert('Success', `Joined ${data.class.name}!`);
-        setJoinModalVisible(false);
-        setJoinCode('');
-        loadClasses();
-      } else {
-        Alert.alert('Error', data.error || 'Failed to join class');
-      }
+      const response = await classAPI.joinClass({ join_code: joinCode.toUpperCase() });
+      Alert.alert(
+        'Request Submitted',
+        'Your join request has been submitted. Waiting for instructor approval.',
+        [{ text: 'OK', onPress: () => {} }]
+      );
+      setJoinModalVisible(false);
+      setJoinCode('');
+      loadClasses();
     } catch (error) {
-      Alert.alert('Error', 'Failed to join class');
+      Alert.alert('Error', error.response?.data?.error || 'Failed to submit join request');
     }
   };
 
@@ -85,32 +101,23 @@ const ClassesScreen = ({ navigation }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/classes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: className,
-          description: classDescription,
-        }),
+      const response = await classAPI.createClass({
+        name: className,
+        description: classDescription,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert(
-          'Success',
-          `Class created! Share code ${data.class.join_code} with students.`,
-          [{ text: 'OK', onPress: () => {} }]
-        );
-        setCreateModalVisible(false);
-        setClassName('');
-        setClassDescription('');
-        loadClasses();
-      } else {
-        Alert.alert('Error', data.error || 'Failed to create class');
-      }
+      Alert.alert(
+        'Success',
+        `Class created! Share code ${response.data.class.join_code} with students.`,
+        [{ text: 'OK', onPress: () => {} }]
+      );
+      setCreateModalVisible(false);
+      setClassName('');
+      setClassDescription('');
+      loadClasses();
     } catch (error) {
-      Alert.alert('Error', 'Failed to create class');
+      console.error('Create class error:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to create class');
     }
   };
 
@@ -473,5 +480,4 @@ const styles = StyleSheet.create({
 });
 
 export default ClassesScreen;
-
 

@@ -17,6 +17,7 @@ class Class(db.Model):
     # Relationships
     instructor = db.relationship('User', backref='classes_taught', foreign_keys=[instructor_id])
     memberships = db.relationship('ClassMembership', backref='class_', lazy=True, cascade='all, delete-orphan')
+    join_requests = db.relationship('ClassJoinRequest', backref='class_', lazy=True, cascade='all, delete-orphan')
     assigned_workouts = db.relationship('AssignedWorkout', backref='class_', lazy=True, cascade='all, delete-orphan')
     
     def generate_join_code(self):
@@ -55,6 +56,34 @@ class Class(db.Model):
             result['members'] = [m.to_dict() for m in self.get_members()]
         
         return result
+
+
+class ClassJoinRequest(db.Model):
+    __tablename__ = 'class_join_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    class_id = db.Column(db.Integer, db.ForeignKey('classes.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'accepted', 'rejected'
+    requested_at = db.Column(db.DateTime, default=datetime.utcnow)
+    responded_at = db.Column(db.DateTime)
+    
+    # Relationships
+    student = db.relationship('User', backref='class_join_requests', foreign_keys=[student_id])
+    
+    # Unique constraint: a student can only have one pending request per class
+    __table_args__ = (db.UniqueConstraint('class_id', 'student_id', name='unique_class_join_request'),)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'class_id': self.class_id,
+            'student_id': self.student_id,
+            'student': self.student.to_dict() if self.student else None,
+            'status': self.status,
+            'requested_at': self.requested_at.isoformat() if self.requested_at else None,
+            'responded_at': self.responded_at.isoformat() if self.responded_at else None
+        }
 
 
 class ClassMembership(db.Model):

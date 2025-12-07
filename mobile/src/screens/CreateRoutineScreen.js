@@ -24,6 +24,8 @@ const CreateRoutineScreen = ({ navigation, route }) => {
   const [selectedIcon, setSelectedIcon] = useState('dumbbell');
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [availableExercises, setAvailableExercises] = useState([]);
+  const [filteredExercises, setFilteredExercises] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -35,10 +37,49 @@ const CreateRoutineScreen = ({ navigation, route }) => {
     try {
       const response = await exerciseAPI.getExercises();
       setAvailableExercises(response.data.exercises);
+      setFilteredExercises(response.data.exercises);
     } catch (error) {
       console.error('Error loading exercises:', error);
     }
   };
+
+  // Filter exercises based on search query
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredExercises(availableExercises);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = availableExercises.filter(exercise => {
+        // Search in name
+        if (exercise.name && exercise.name.toLowerCase().includes(query)) {
+          return true;
+        }
+        // Search in description
+        if (exercise.description && exercise.description.toLowerCase().includes(query)) {
+          return true;
+        }
+        // Search in category
+        if (exercise.category && exercise.category.toLowerCase().includes(query)) {
+          return true;
+        }
+        // Search in muscle groups (can be array or comma-separated string)
+        if (exercise.muscle_groups) {
+          const muscleGroupsStr = Array.isArray(exercise.muscle_groups)
+            ? exercise.muscle_groups.join(',').toLowerCase()
+            : exercise.muscle_groups.toLowerCase();
+          if (muscleGroupsStr.includes(query)) {
+            return true;
+          }
+        }
+        // Search in equipment
+        if (exercise.equipment && exercise.equipment.toLowerCase().includes(query)) {
+          return true;
+        }
+        return false;
+      });
+      setFilteredExercises(filtered);
+    }
+  }, [searchQuery, availableExercises]);
 
   const icons = [
     'dumbbell',
@@ -229,19 +270,43 @@ const CreateRoutineScreen = ({ navigation, route }) => {
         visible={showExercisePicker}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setShowExercisePicker(false)}
+        onRequestClose={() => {
+          setShowExercisePicker(false);
+          setSearchQuery(''); // Clear search when closing
+        }}
       >
         <View style={globalStyles.modalContainer}>
           <View style={globalStyles.modalContent}>
             <View style={globalStyles.modalHeader}>
               <Text style={globalStyles.modalTitle}>Add Exercises</Text>
-              <TouchableOpacity onPress={() => setShowExercisePicker(false)}>
+              <TouchableOpacity onPress={() => {
+                setShowExercisePicker(false);
+                setSearchQuery(''); // Clear search when closing
+              }}>
                 <Icon name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+              <Icon name="magnify" size={20} color={colors.textTertiary} style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search exercises..."
+                placeholderTextColor={colors.textTertiary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus={false}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchButton}>
+                  <Icon name="close-circle" size={20} color={colors.textTertiary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
             <FlatList
-              data={availableExercises}
+              data={filteredExercises}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => {
                 const isSelected = selectedExercises.find((e) => e.id === item.id);
@@ -274,7 +339,14 @@ const CreateRoutineScreen = ({ navigation, route }) => {
               }}
               ListEmptyComponent={
                 <View style={styles.emptyList}>
-                  <Text style={styles.emptyListText}>No exercises available</Text>
+                  <Text style={styles.emptyListText}>
+                    {searchQuery ? 'No exercises found' : 'No exercises available'}
+                  </Text>
+                  {searchQuery && (
+                    <Text style={styles.emptyListSubtext}>
+                      Try a different search term
+                    </Text>
+                  )}
                 </View>
               }
             />
@@ -282,7 +354,10 @@ const CreateRoutineScreen = ({ navigation, route }) => {
             <View style={styles.modalFooter}>
               <Button
                 title={`Add ${selectedExercises.length} Exercise${selectedExercises.length !== 1 ? 's' : ''}`}
-                onPress={() => setShowExercisePicker(false)}
+                onPress={() => {
+                  setShowExercisePicker(false);
+                  setSearchQuery(''); // Clear search when closing
+                }}
                 disabled={selectedExercises.length === 0}
               />
             </View>
@@ -464,6 +539,36 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: colors.cardBorder,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.cardBg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  clearSearchButton: {
+    padding: 4,
+  },
+  emptyListSubtext: {
+    fontSize: 14,
+    color: colors.textTertiary,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
 

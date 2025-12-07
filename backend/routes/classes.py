@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db
 from models.user import User
-from models.classes import Class, ClassMembership, AssignedWorkout, StudentWorkoutLog
+from models.classes import Class, ClassMembership, ClassJoinRequest, AssignedWorkout, StudentWorkoutLog
 from models.workout import Workout
 from datetime import datetime
 from sqlalchemy import func
@@ -144,7 +144,7 @@ def delete_class(class_id):
 @bp.route('/join', methods=['POST'])
 @jwt_required()
 def join_class():
-    """Join a class using join code (student only)"""
+    """Request to join a class using join code (student only)"""
     user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     
@@ -176,19 +176,30 @@ def join_class():
     if existing_membership:
         return jsonify({'error': 'You are already a member of this class'}), 400
     
-    # Create membership
-    membership = ClassMembership(
+    # Check if there's already a pending request
+    existing_request = ClassJoinRequest.query.filter_by(
         class_id=class_obj.id,
-        student_id=user_id
+        student_id=user_id,
+        status='pending'
+    ).first()
+    
+    if existing_request:
+        return jsonify({'error': 'You already have a pending request for this class'}), 400
+    
+    # Create join request
+    join_request = ClassJoinRequest(
+        class_id=class_obj.id,
+        student_id=user_id,
+        status='pending'
     )
     
-    db.session.add(membership)
+    db.session.add(join_request)
     db.session.commit()
     
     return jsonify({
-        'message': 'Successfully joined class',
+        'message': 'Join request submitted. Waiting for instructor approval.',
         'class': class_obj.to_dict(),
-        'membership': membership.to_dict()
+        'request': join_request.to_dict()
     }), 201
 
 
@@ -242,6 +253,123 @@ def remove_member(class_id, student_id):
     db.session.commit()
     
     return jsonify({'message': 'Member removed successfully'}), 200
+
+
+# ==================== JOIN REQUESTS ====================
+
+@bp.route('/<int:class_id>/join-requests', methods=['GET'])
+@jwt_required()
+def get_join_requests(class_id):
+    """Get pending join requests for a class (instructor only)"""
+    user_id = int(get_jwt_identity())
+    class_obj = Class.query.get(class_id)
+    
+    if not class_obj:
+        return jsonify({'error': 'Class not found'}), 404
+    
+    if class_obj.instructor_id != user_id:
+        return jsonify({'error': 'Only the instructor can view join requests'}), 403
+    
+    # Get only pending requests
+    requests = ClassJoinRequest.query.filter_by(
+        class_id=class_id,
+        status='pending'
+    ).order_by(ClassJoinRequest.requested_at.desc()).all()
+    
+    return jsonify({
+        'requests': [r.to_dict() for r in requests],
+        'total_count': len(requests)
+    }), 200
+
+
+@bp.route('/<int:class_id>/join-requests/<int:request_id>/accept', methods=['POST'])
+@jwt_required()
+def accept_join_request(class_id, request_id):
+    """Accept a join request (instructor only)"""
+    user_id = int(get_jwt_identity())
+    class_obj = Class.query.get(class_id)
+    
+    if not class_obj:
+        return jsonify({'error': 'Class not found'}), 404
+    
+    if class_obj.instructor_id != user_id:
+        return jsonify({'error': 'Only the instructor can accept join requests'}), 403
+    
+    join_request = ClassJoinRequest.query.get(request_id)
+    
+    if not join_request:
+        return jsonify({'error': 'Join request not found'}), 404
+    
+    if join_request.class_id != class_id:
+        return jsonify({'error': 'Request does not belong to this class'}), 400
+    
+    if join_request.status != 'pending':
+        return jsonify({'error': 'This request has already been processed'}), 400
+    
+    # Check if student is already a member
+    existing_membership = ClassMembership.query.filter_by(
+        class_id=class_id,
+        student_id=join_request.student_id
+    ).first()
+    
+    if existing_membership:
+        # Delete the request since they're already a member
+        db.session.delete(join_request)
+        db.session.commit()
+        return jsonify({'error': 'Student is already a member of this class'}), 400
+    
+    # Create membership
+    membership = ClassMembership(
+        class_id=class_id,
+        student_id=join_request.student_id
+    )
+    
+    # Update request status
+    join_request.status = 'accepted'
+    join_request.responded_at = datetime.utcnow()
+    
+    db.session.add(membership)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Join request accepted',
+        'membership': membership.to_dict()
+    }), 200
+
+
+@bp.route('/<int:class_id>/join-requests/<int:request_id>/reject', methods=['POST'])
+@jwt_required()
+def reject_join_request(class_id, request_id):
+    """Reject a join request (instructor only)"""
+    user_id = int(get_jwt_identity())
+    class_obj = Class.query.get(class_id)
+    
+    if not class_obj:
+        return jsonify({'error': 'Class not found'}), 404
+    
+    if class_obj.instructor_id != user_id:
+        return jsonify({'error': 'Only the instructor can reject join requests'}), 403
+    
+    join_request = ClassJoinRequest.query.get(request_id)
+    
+    if not join_request:
+        return jsonify({'error': 'Join request not found'}), 404
+    
+    if join_request.class_id != class_id:
+        return jsonify({'error': 'Request does not belong to this class'}), 400
+    
+    if join_request.status != 'pending':
+        return jsonify({'error': 'This request has already been processed'}), 400
+    
+    # Update request status
+    join_request.status = 'rejected'
+    join_request.responded_at = datetime.utcnow()
+    
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Join request rejected'
+    }), 200
 
 
 # ==================== WORKOUT ASSIGNMENTS ====================
@@ -372,6 +500,48 @@ def get_assigned_workout(class_id, workout_id):
     return jsonify({
         'assigned_workout': workout_dict,
         'is_instructor': is_instructor
+    }), 200
+
+
+@bp.route('/<int:class_id>/assigned-workouts/<int:workout_id>', methods=['PUT'])
+@jwt_required()
+def update_assigned_workout(class_id, workout_id):
+    """Update an assigned workout (instructor only)"""
+    user_id = int(get_jwt_identity())
+    class_obj = Class.query.get(class_id)
+    
+    if not class_obj:
+        return jsonify({'error': 'Class not found'}), 404
+    
+    if class_obj.instructor_id != user_id:
+        return jsonify({'error': 'Only the instructor can update assigned workouts'}), 403
+    
+    assigned_workout = AssignedWorkout.query.filter_by(id=workout_id, class_id=class_id).first()
+    
+    if not assigned_workout:
+        return jsonify({'error': 'Assigned workout not found'}), 404
+    
+    data = request.get_json()
+    
+    # Update fields
+    if 'name' in data:
+        assigned_workout.name = data['name']
+    if 'description' in data:
+        assigned_workout.description = data.get('description', '')
+    if 'due_date' in data:
+        assigned_workout.due_date = datetime.fromisoformat(data['due_date']) if data.get('due_date') else None
+    if 'exercises' in data:
+        # Update workout template with exercises
+        workout_template = {
+            'exercises': data.get('exercises', [])
+        }
+        assigned_workout.workout_template = workout_template
+    
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Assigned workout updated successfully',
+        'assigned_workout': assigned_workout.to_dict()
     }), 200
 
 

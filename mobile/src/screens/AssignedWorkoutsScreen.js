@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,14 +10,16 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { globalStyles } from '../styles/globalStyles';
 import colors from '../styles/colors';
 import Button from '../components/Button';
-import { API_URL } from '../services/api';
+import { classAPI } from '../services/api';
 
 const AssignedWorkoutsScreen = ({ route, navigation }) => {
-  const { classId } = route.params;
+  // Ensure classId is a number
+  const classId = route.params?.classId ? Number(route.params.classId) : null;
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,23 +35,33 @@ const AssignedWorkoutsScreen = ({ route, navigation }) => {
     loadWorkouts();
   }, []);
 
-  // Reload workouts when screen comes into focus
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
+  // Reload workouts when screen comes into focus (e.g., returning from edit screen)
+  useFocusEffect(
+    useCallback(() => {
       loadWorkouts();
-    });
-    return unsubscribe;
-  }, [navigation]);
+    }, [])
+  );
 
   const loadWorkouts = async () => {
     try {
-      const response = await fetch(`${API_URL}/classes/${classId}/assigned-workouts`);
-      const data = await response.json();
-      setWorkouts(data.assigned_workouts || []);
-      setIsInstructor(data.is_instructor || false);
+      setLoading(true);
+      
+      if (!classId) {
+        console.error('No classId provided');
+        Alert.alert('Error', 'Class ID is missing');
+        return;
+      }
+      
+      console.log('Loading assigned workouts for class:', classId);
+      const response = await classAPI.getAssignedWorkouts(classId);
+      console.log('Assigned workouts response:', response.data);
+      setWorkouts(response.data.assigned_workouts || []);
+      setIsInstructor(response.data.is_instructor || false);
     } catch (error) {
       console.error('Error loading workouts:', error);
-      Alert.alert('Error', 'Failed to load workouts');
+      console.error('Error status:', error.response?.status);
+      console.error('Error response:', error.response?.data);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to load workouts');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -70,31 +82,21 @@ const AssignedWorkoutsScreen = ({ route, navigation }) => {
     if (!selectedWorkout) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/classes/${classId}/assigned-workouts/${selectedWorkout.id}/complete`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            duration: duration ? parseInt(duration) : null,
-            total_volume: volume ? parseFloat(volume) : null,
-            calories_burned: calories ? parseInt(calories) : null,
-            notes: notes,
-          }),
-        }
-      );
+      const response = await classAPI.completeWorkout(classId, selectedWorkout.id, {
+        duration: duration ? parseInt(duration) : null,
+        total_volume: volume ? parseFloat(volume) : null,
+        calories_burned: calories ? parseInt(calories) : null,
+        notes: notes,
+      });
 
-      if (response.ok) {
-        Alert.alert('Success', 'Workout completed! Great job! 💪');
-        setCompleteModalVisible(false);
-        resetForm();
-        loadWorkouts();
-      } else {
-        const data = await response.json();
-        Alert.alert('Error', data.error || 'Failed to complete workout');
-      }
+      Alert.alert('Success', 'Workout completed! Great job! 💪');
+      setCompleteModalVisible(false);
+      resetForm();
+      loadWorkouts();
     } catch (error) {
-      Alert.alert('Error', 'Failed to complete workout');
+      console.error('Error completing workout:', error);
+      console.error('Error response:', error.response?.data);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to complete workout');
     }
   };
 
@@ -104,6 +106,37 @@ const AssignedWorkoutsScreen = ({ route, navigation }) => {
     setCalories('');
     setNotes('');
     setSelectedWorkout(null);
+  };
+
+  const openEditScreen = (workout) => {
+    navigation.navigate('EditAssignedWorkout', { 
+      classId, 
+      workout 
+    });
+  };
+
+  const handleDeleteWorkout = (workout) => {
+    Alert.alert(
+      'Delete Workout',
+      `Are you sure you want to delete "${workout.name}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await classAPI.deleteAssignedWorkout(classId, workout.id);
+              Alert.alert('Success', 'Workout deleted successfully');
+              loadWorkouts();
+            } catch (error) {
+              console.error('Error deleting workout:', error);
+              Alert.alert('Error', error.response?.data?.error || 'Failed to delete workout');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const renderWorkoutCard = (workout) => {
@@ -126,11 +159,29 @@ const AssignedWorkoutsScreen = ({ route, navigation }) => {
               <Icon name="check-circle" size={24} color={colors.success} />
             )}
           </View>
-          {isDue && !isCompleted && (
-            <View style={styles.dueBadge}>
-              <Text style={styles.dueText}>Overdue</Text>
-            </View>
-          )}
+          <View style={styles.headerActions}>
+            {isDue && !isCompleted && (
+              <View style={styles.dueBadge}>
+                <Text style={styles.dueText}>Overdue</Text>
+              </View>
+            )}
+            {isInstructor && (
+              <View style={styles.instructorActions}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => openEditScreen(workout)}
+                >
+                  <Icon name="pencil" size={20} color={colors.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => handleDeleteWorkout(workout)}
+                >
+                  <Icon name="delete" size={20} color={colors.error} />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Exercises List */}
@@ -368,6 +419,7 @@ const AssignedWorkoutsScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
 
     </View>
   );

@@ -4,7 +4,7 @@ from models import db
 from models.workout import Exercise
 from models.nutrition import Food, NutritionGoal
 from models.user import User
-from models.classes import Class, ClassMembership, AssignedWorkout, StudentWorkoutLog
+from models.classes import Class, ClassMembership, ClassJoinRequest, AssignedWorkout, StudentWorkoutLog
 from datetime import datetime, timedelta
 
 def seed_exercises():
@@ -675,6 +675,28 @@ def seed_foods():
     db.session.commit()
     print(f"✓ Seeded {len(foods)} foods")
 
+def seed_instructor():
+    """Create a sample instructor account"""
+    instructor_data = {
+        'email': 'instructor@fittrack.app',
+        'username': 'instructor',
+        'full_name': 'Fitness Instructor',
+        'role': 'instructor'
+    }
+    
+    existing = User.query.filter_by(email=instructor_data['email']).first()
+    if not existing:
+        instructor = User(**instructor_data)
+        instructor.set_password('Instructor123!')  # Default password for seeded instructor
+        db.session.add(instructor)
+        db.session.commit()
+        print(f"✓ Created instructor account: {instructor_data['email']}")
+        return instructor
+    else:
+        print(f"✓ Instructor account already exists: {instructor_data['email']}")
+        return existing
+
+
 def seed_students():
     """Create sample students"""
     students_data = [
@@ -726,10 +748,11 @@ def seed_students():
     return students
 
 
-def seed_classes():
+def seed_classes(instructor=None):
     """Create sample classes with members"""
-    # Get the first instructor from the database
-    instructor = User.query.filter_by(role='instructor').first()
+    # Use provided instructor or get the first instructor from the database
+    if not instructor:
+        instructor = User.query.filter_by(role='instructor').first()
     if not instructor:
         print("⚠ No instructor found, skipping class seeding")
         return None
@@ -750,25 +773,116 @@ def seed_classes():
         fitness_class = existing_class
         print(f"✓ Class already exists: {fitness_class.name}")
     
-    # Add students to the class
+    # Add some students directly as members (for testing existing members)
     students = User.query.filter_by(role='student').all()
-    for student in students:
-        existing_membership = ClassMembership.query.filter_by(
-            class_id=fitness_class.id,
-            student_id=student.id
-        ).first()
-        
-        if not existing_membership:
-            membership = ClassMembership(
+    if students:
+        # Add first 2 students as members
+        for student in students[:2]:
+            existing_membership = ClassMembership.query.filter_by(
                 class_id=fitness_class.id,
                 student_id=student.id
-            )
-            db.session.add(membership)
-    
-    db.session.commit()
-    print(f"✓ Added {len(students)} students to the class")
+            ).first()
+            
+            if not existing_membership:
+                membership = ClassMembership(
+                    class_id=fitness_class.id,
+                    student_id=student.id
+                )
+                db.session.add(membership)
+        
+        db.session.commit()
+        print(f"✓ Added {min(2, len(students))} students as members to the class")
     
     return fitness_class
+
+
+def seed_join_requests(fitness_class):
+    """Create sample join requests for testing"""
+    if not fitness_class:
+        return
+    
+    # Get students who are not yet members
+    all_students = User.query.filter_by(role='student').all()
+    existing_member_ids = [m.student_id for m in ClassMembership.query.filter_by(class_id=fitness_class.id).all()]
+    students_without_membership = [s for s in all_students if s.id not in existing_member_ids]
+    
+    if not students_without_membership:
+        print("⚠ No students available for join requests")
+        return
+    
+    # Create pending join requests for some students
+    requests_created = 0
+    for i, student in enumerate(students_without_membership[:3]):  # Create requests for up to 3 students
+        # Check if request already exists
+        existing_request = ClassJoinRequest.query.filter_by(
+            class_id=fitness_class.id,
+            student_id=student.id,
+            status='pending'
+        ).first()
+        
+        if not existing_request:
+            join_request = ClassJoinRequest(
+                class_id=fitness_class.id,
+                student_id=student.id,
+                status='pending'
+            )
+            db.session.add(join_request)
+            requests_created += 1
+    
+    db.session.commit()
+    print(f"✓ Created {requests_created} pending join requests")
+    
+    # Also create one accepted and one rejected request for testing history (if we have enough students)
+    # Get students not in pending requests and not already members
+    pending_request_student_ids = [r.student_id for r in ClassJoinRequest.query.filter_by(
+        class_id=fitness_class.id,
+        status='pending'
+    ).all()]
+    remaining_students = [
+        s for s in students_without_membership 
+        if s.id not in pending_request_student_ids
+    ]
+    
+    if len(remaining_students) >= 2:
+        # Create an accepted request (and add as member)
+        student_for_accepted = remaining_students[0]
+        # Check if request already exists
+        existing_accepted = ClassJoinRequest.query.filter_by(
+            class_id=fitness_class.id,
+            student_id=student_for_accepted.id
+        ).first()
+        if not existing_accepted:
+            accepted_request = ClassJoinRequest(
+                class_id=fitness_class.id,
+                student_id=student_for_accepted.id,
+                status='accepted',
+                responded_at=datetime.utcnow() - timedelta(days=1)
+            )
+            db.session.add(accepted_request)
+            # Also create membership since it was accepted
+            membership = ClassMembership(
+                class_id=fitness_class.id,
+                student_id=student_for_accepted.id
+            )
+            db.session.add(membership)
+        
+        # Create a rejected request
+        student_for_rejected = remaining_students[1]
+        existing_rejected = ClassJoinRequest.query.filter_by(
+            class_id=fitness_class.id,
+            student_id=student_for_rejected.id
+        ).first()
+        if not existing_rejected:
+            rejected_request = ClassJoinRequest(
+                class_id=fitness_class.id,
+                student_id=student_for_rejected.id,
+                status='rejected',
+                responded_at=datetime.utcnow() - timedelta(days=2)
+            )
+            db.session.add(rejected_request)
+        
+        db.session.commit()
+        print(f"✓ Created sample accepted and rejected join requests (for testing history)")
 
 
 def seed_assigned_workouts(fitness_class):
@@ -1008,16 +1122,24 @@ def seed_all():
         
         # Seed class-related data
         print("\n--- Seeding Class Feature Data ---")
+        instructor = seed_instructor()
         students = seed_students()
-        fitness_class = seed_classes()
+        fitness_class = seed_classes(instructor)  # Pass the instructor we just created
+        seed_join_requests(fitness_class)
         seed_assigned_workouts(fitness_class)
         
         print("\n✅ Database seeded successfully!")
+        if instructor:
+            print("\n👨‍🏫 Test Instructor Account:")
+            print("   Email: instructor@fittrack.app")
+            print("   Password: Instructor123!")
         if students:
             print("\n📚 Test Student Accounts:")
             print("   Students: student1-5@fittrack.app / SamplePass123!")
         if fitness_class:
             print(f"\n🏋️ Class Join Code: {fitness_class.join_code}")
+            print(f"   - Some students are already members")
+            print(f"   - Some students have pending join requests (for testing)")
 
 if __name__ == '__main__':
     seed_all()
