@@ -198,4 +198,3 @@ class StudentWorkoutLog(db.Model):
             'calories_burned': self.calories_burned,
             'notes': self.notes
         }
-

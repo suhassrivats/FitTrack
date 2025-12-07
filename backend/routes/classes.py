@@ -177,14 +177,18 @@ def join_class():
         return jsonify({'error': 'You are already a member of this class'}), 400
     
     # Check if there's already a pending request
-    existing_request = ClassJoinRequest.query.filter_by(
+    existing_pending = ClassJoinRequest.query.filter_by(
         class_id=class_obj.id,
         student_id=user_id,
         status='pending'
     ).first()
     
-    if existing_request:
+    if existing_pending:
         return jsonify({'error': 'You already have a pending request for this class'}), 400
+    
+    # If there's an old rejected request, we can optionally delete it to keep history clean
+    # Or we can keep it for audit purposes. For now, we'll keep it but allow new requests.
+    # If there's an old accepted request, the student should already be a member (checked above)
     
     # Create join request
     join_request = ClassJoinRequest(
