@@ -2,16 +2,12 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// Base API URL - change this to your backend URL
-// iOS Simulator: use localhost
-// Android Emulator: use 10.0.2.2 (maps to host machine's localhost)
-// Physical Device: use your computer's IP address
-// Web: use localhost
-const API_BASE_URL = Platform.OS === 'web' 
-  ? 'http://localhost:5000/api'
-  : Platform.OS === 'ios'
-    ? 'http://localhost:5000/api'  // iOS Simulator can access localhost
-    : 'http://10.0.2.2:5000/api';  // Android Emulator (or use your computer's IP for physical device)
+// Base API URL - using Fly.io deployment
+// For local development, you can change this back to:
+// - iOS Simulator: 'http://localhost:5000/api'
+// - Android Emulator: 'http://10.0.2.2:5000/api'
+// - Physical Device: 'http://YOUR_IP:5000/api'
+const API_BASE_URL = 'https://fittrack-api.fly.dev/api';
 
 // Export for use in screens
 export const API_URL = API_BASE_URL;
@@ -50,9 +46,10 @@ api.interceptors.response.use(
   },
   async (error) => {
     console.error('API Error:', error.config?.url, error.response?.status, error.response?.data);
-    // Clear invalid tokens on 401 unauthorized errors
-    if (error.response?.status === 401) {
-      console.log('Clearing invalid auth token due to 401');
+    // Clear invalid tokens on 401 unauthorized or 422 signature verification failed errors
+    if (error.response?.status === 401 || 
+        (error.response?.status === 422 && error.response?.data?.msg?.includes('Signature verification failed'))) {
+      console.log('Clearing invalid auth token due to authentication error');
       await AsyncStorage.removeItem('authToken');
       await AsyncStorage.removeItem('user');
       setAuthToken(null);

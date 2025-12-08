@@ -33,3 +33,7 @@ primary_region = 'sjc'
 
 [[vm]]
   size = 'shared-cpu-1x'
+
+[[mounts]]
+  source = "fittrack_db"
+  destination = "/data"

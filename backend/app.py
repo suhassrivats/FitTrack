@@ -21,9 +21,15 @@ if DATABASE_URL:
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
     # SQLite for local development and single-instance deployments
-    # Use absolute path for Fly.io deployment
-    import os
-    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'fittrack.db')
+    # Check if we're on Fly.io (volume mounted at /data) or local
+    if os.path.exists('/data'):
+        # Fly.io with persistent volume
+        db_path = '/data/fittrack.db'
+    else:
+        # Local development - use instance directory
+        instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+        os.makedirs(instance_dir, exist_ok=True)
+        db_path = os.path.join(instance_dir, 'fittrack.db')
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 
 # Lambda-optimized connection pooling
