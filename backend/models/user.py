@@ -17,7 +17,6 @@ class User(db.Model):
     
     # Relationships
     workouts = db.relationship('Workout', backref='user', lazy=True, cascade='all, delete-orphan')
-    meals = db.relationship('Meal', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
         """Hash and set the user's password"""
