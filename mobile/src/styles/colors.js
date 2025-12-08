@@ -26,11 +26,6 @@ export const colors = {
   error: '#ef4444',
   info: '#3b82f6',
   danger: '#ef4444',
-  
-  // Nutrition colors
-  protein: '#4A90E2',
-  carbs: '#F5A623',
-  fats: '#9013FE',
 };
 
 export default colors;

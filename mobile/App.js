@@ -15,9 +15,6 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import LogWorkoutScreen from './src/screens/LogWorkoutScreen';
 import ExercisesScreen from './src/screens/ExercisesScreen';
 import ExerciseDetailsScreen from './src/screens/ExerciseDetailsScreen';
-import FoodRecommendationsScreen from './src/screens/FoodRecommendationsScreen';
-import MacroTrackingScreen from './src/screens/MacroTrackingScreen';
-import MealPlannerScreen from './src/screens/MealPlannerScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import StatisticsScreen from './src/screens/StatisticsScreen';
 import CreateRoutineScreen from './src/screens/CreateRoutineScreen';
@@ -189,9 +186,6 @@ export default function App() {
               <Stack.Screen name="CreateRoutine" component={CreateRoutineScreen} />
               <Stack.Screen name="Units" component={UnitsScreen} />
               <Stack.Screen name="ExerciseDetails" component={ExerciseDetailsScreen} />
-              <Stack.Screen name="FoodRecommendations" component={FoodRecommendationsScreen} />
-              <Stack.Screen name="MacroTracking" component={MacroTrackingScreen} />
-              <Stack.Screen name="MealPlanner" component={MealPlannerScreen} />
               <Stack.Screen name="ClassDetails" component={ClassDetailsScreen} />
               <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
               <Stack.Screen name="AssignedWorkouts" component={AssignedWorkoutsScreen} />

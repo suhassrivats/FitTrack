@@ -99,18 +99,6 @@ export const exerciseAPI = {
   createExercise: (data) => api.post('/exercises', data),
 };
 
-// Nutrition APIs
-export const nutritionAPI = {
-  getMeals: (params) => api.get('/nutrition/meals', { params }),
-  createMeal: (data) => api.post('/nutrition/meals', data),
-  deleteMeal: (id) => api.delete(`/nutrition/meals/${id}`),
-  getFoods: (params) => api.get('/nutrition/foods', { params }),
-  getFood: (id) => api.get(`/nutrition/foods/${id}`),
-  createFood: (data) => api.post('/nutrition/foods', data),
-  getGoals: () => api.get('/nutrition/goals'),
-  updateGoals: (data) => api.put('/nutrition/goals', data),
-  getDailySummary: (params) => api.get('/nutrition/daily-summary', { params }),
-};
 
 // Profile APIs
 export const profileAPI = {

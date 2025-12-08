@@ -1,8 +1,7 @@
-"""Seed database with sample exercises and foods"""
+"""Seed database with sample exercises"""
 from app import app
 from models import db
 from models.workout import Exercise
-from models.nutrition import Food, NutritionGoal
 from models.user import User
 from models.classes import Class, ClassMembership, ClassJoinRequest, AssignedWorkout, StudentWorkoutLog
 from datetime import datetime, timedelta
@@ -551,130 +550,6 @@ def seed_exercises():
     db.session.commit()
     print(f"✓ Seeded {len(exercises)} exercises")
 
-def seed_foods():
-    """Add sample foods to the database"""
-    foods = [
-        {
-            'name': 'Grilled Chicken Breast',
-            'description': 'Lean protein source',
-            'calories': 165,
-            'protein': 31,
-            'carbs': 0,
-            'fat': 3.6,
-            'serving_size': '100g',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'high-protein,low-carb,lean'
-        },
-        {
-            'name': 'Brown Rice',
-            'description': 'Whole grain carbohydrate',
-            'calories': 112,
-            'protein': 2.6,
-            'carbs': 24,
-            'fat': 0.9,
-            'serving_size': '100g cooked',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'high-carb,whole-grain'
-        },
-        {
-            'name': 'Salmon Fillet',
-            'description': 'Omega-3 rich fish',
-            'calories': 208,
-            'protein': 20,
-            'carbs': 0,
-            'fat': 13,
-            'serving_size': '100g',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'high-protein,omega-3,healthy-fats'
-        },
-        {
-            'name': 'Greek Yogurt',
-            'description': 'High protein dairy',
-            'calories': 59,
-            'protein': 10,
-            'carbs': 3.6,
-            'fat': 0.4,
-            'serving_size': '100g',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'high-protein,low-fat,dairy'
-        },
-        {
-            'name': 'Oatmeal',
-            'description': 'Fiber-rich breakfast',
-            'calories': 71,
-            'protein': 2.5,
-            'carbs': 12,
-            'fat': 1.5,
-            'serving_size': '40g dry',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'high-fiber,whole-grain,breakfast'
-        },
-        {
-            'name': 'Avocado',
-            'description': 'Healthy fats',
-            'calories': 160,
-            'protein': 2,
-            'carbs': 9,
-            'fat': 15,
-            'serving_size': '100g',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'healthy-fats,high-fiber'
-        },
-        {
-            'name': 'Protein Shake',
-            'description': 'Post-workout recovery',
-            'calories': 150,
-            'protein': 25,
-            'carbs': 5,
-            'fat': 2,
-            'serving_size': '1 scoop (30g)',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'high-protein,quick-prep,supplement'
-        },
-        {
-            'name': 'Sweet Potato',
-            'description': 'Complex carbohydrate',
-            'calories': 86,
-            'protein': 1.6,
-            'carbs': 20,
-            'fat': 0.1,
-            'serving_size': '100g',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'high-carb,high-fiber,complex-carb'
-        },
-        {
-            'name': 'Mixed Greens Salad',
-            'description': 'Nutrient-dense vegetables',
-            'calories': 20,
-            'protein': 1.5,
-            'carbs': 3,
-            'fat': 0.2,
-            'serving_size': '100g',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'low-calorie,high-fiber,vegetables'
-        },
-        {
-            'name': 'Almonds',
-            'description': 'Healthy snack',
-            'calories': 579,
-            'protein': 21,
-            'carbs': 22,
-            'fat': 50,
-            'serving_size': '100g',
-            'image_url': 'https://via.placeholder.com/200',
-            'tags': 'healthy-fats,high-protein,snack'
-        }
-    ]
-    
-    for food_data in foods:
-        existing = Food.query.filter_by(name=food_data['name']).first()
-        if not existing:
-            food = Food(**food_data)
-            db.session.add(food)
-    
-    db.session.commit()
-    print(f"✓ Seeded {len(foods)} foods")
-
 def seed_instructor():
     """Create a sample instructor account"""
     instructor_data = {
@@ -1118,7 +993,6 @@ def seed_all():
         print("✓ Created database tables")
         
         seed_exercises()
-        seed_foods()
         
         # Seed class-related data
         print("\n--- Seeding Class Feature Data ---")

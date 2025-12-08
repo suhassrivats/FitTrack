@@ -1,6 +1,6 @@
 # FitTrack - Fitness Tracking Mobile App
 
-A comprehensive fitness tracking application with workout logging, nutrition tracking, meal planning, and class management features. Built with Flask REST API backend and React Native frontend for iOS and Android.
+A comprehensive fitness tracking application with workout logging and class management features. Built with Flask REST API backend and React Native frontend for iOS and Android.
 
 ---
 
@@ -13,13 +13,6 @@ A comprehensive fitness tracking application with workout logging, nutrition tra
 - ✅ Exercise library with detailed instructions and videos
 - ✅ Timer for tracking workout duration
 - ✅ Progress tracking and personal records
-
-### Nutrition Tracking
-- ✅ Log meals and track daily macros (protein, carbs, fats)
-- ✅ Set and monitor nutrition goals
-- ✅ Food recommendations based on macro needs
-- ✅ Weekly meal planner
-- ✅ Calorie tracking with visual progress indicators
 
 ### Class Management
 - ✅ Instructors can create and manage fitness classes
@@ -62,13 +55,11 @@ A comprehensive fitness tracking application with workout logging, nutrition tra
 │   │   ├── __init__.py     # Database initialization
 │   │   ├── user.py         # User authentication and profiles
 │   │   ├── workout.py      # Workouts, exercises, routines
-│   │   ├── nutrition.py    # Meals, foods, nutrition goals
 │   │   └── classes.py      # Classes, memberships, assigned workouts
 │   ├── routes/              # API endpoints
 │   │   ├── auth.py         # Authentication endpoints
 │   │   ├── workouts.py     # Workout management
 │   │   ├── exercises.py    # Exercise library
-│   │   ├── nutrition.py    # Nutrition tracking
 │   │   ├── profile.py      # User profiles
 │   │   └── classes.py      # Class management
 │   ├── app.py               # Flask application entry point

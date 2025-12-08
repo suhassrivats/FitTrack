@@ -1,7 +1,8 @@
-# Python
+# Fly.io ignore file (similar to .dockerignore)
+# Files and directories listed here won't be uploaded to Fly.io
+
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
 venv/
@@ -11,51 +12,35 @@ ENV/
 dist/
 build/
 
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Database
 *.db
 *.sqlite
 *.sqlite3
 instance/*.db
 
-# Environment variables
 .env
 .env.local
 
-# Git
 .git/
 .gitignore
 
-# Documentation
 *.md
 README*
 
-# Deployment files
-fly.toml
-Procfile
-deploy.sh
-serverless.yml
-lambda_handler.py
-
-# Node modules (if any)
 node_modules/
 package.json
 package-lock.json
 
-# OS files
 .DS_Store
 Thumbs.db
 
-# Logs
 *.log
 
-# Testing
 .pytest_cache/
 .coverage
 htmlcov/
@@ -63,6 +48,5 @@ tests/
 conftest.py
 pytest.ini
 
-# Local files
 *.local
 

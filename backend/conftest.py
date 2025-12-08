@@ -6,7 +6,6 @@ from app import app
 from models import db
 from models.user import User
 from models.workout import Workout, WorkoutExercise, ExerciseSet, Routine
-from models.nutrition import Meal, Food, NutritionGoal
 from flask_jwt_extended import create_access_token
 
 @pytest.fixture

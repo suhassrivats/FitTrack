@@ -3,17 +3,16 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy requirements and install dependencies
-COPY requirements.txt .
+# Use requirements-prod.txt for production (excludes test dependencies)
+COPY requirements-prod.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install gunicorn for production (if not in requirements.txt)
-RUN pip install --no-cache-dir gunicorn || true
-
-# Copy application code
+# Copy application code (excluding files in .dockerignore)
 COPY . .
 
-# Create instance directory for SQLite database (for local dev)
-RUN mkdir -p instance
+# Create instance directory for SQLite database
+# Make it writable for SQLite database file
+RUN mkdir -p instance && chmod 777 instance
 
 # Expose port (Fly.io uses 8080 by default)
 EXPOSE 8080

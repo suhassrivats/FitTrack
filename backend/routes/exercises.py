@@ -6,8 +6,9 @@ from models.workout import Exercise
 bp = Blueprint('exercises', __name__, url_prefix='/api/exercises')
 
 @bp.route('', methods=['GET'])
+@jwt_required()
 def get_exercises():
-    """Get all exercises - Public endpoint"""
+    """Get all exercises"""
     category = request.args.get('category')
     search = request.args.get('search')
     
@@ -26,8 +27,9 @@ def get_exercises():
     }), 200
 
 @bp.route('/<int:exercise_id>', methods=['GET'])
+@jwt_required()
 def get_exercise(exercise_id):
-    """Get specific exercise - Public endpoint"""
+    """Get specific exercise"""
     exercise = Exercise.query.get(exercise_id)
     
     if not exercise:

@@ -20,8 +20,8 @@ if DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
-    # SQLite for local development
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fittrack.db'
+    # SQLite for local development and single-instance deployments
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/fittrack.db'
 
 # Lambda-optimized connection pooling
 if os.getenv('AWS_LAMBDA_FUNCTION_NAME'):
@@ -57,13 +57,12 @@ from models import db
 db.init_app(app)
 
 # Import routes
-from routes import auth, workouts, exercises, nutrition, profile, classes
+from routes import auth, workouts, exercises, profile, classes
 
 # Register blueprints
 app.register_blueprint(auth.bp)
 app.register_blueprint(workouts.bp)
 app.register_blueprint(exercises.bp)
-app.register_blueprint(nutrition.bp)
 app.register_blueprint(profile.bp)
 app.register_blueprint(classes.bp)
 
@@ -76,7 +75,6 @@ def index():
             'auth': '/api/auth',
             'workouts': '/api/workouts',
             'exercises': '/api/exercises',
-            'nutrition': '/api/nutrition',
             'profile': '/api/profile',
             'classes': '/api/classes'
         }

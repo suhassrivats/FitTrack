@@ -1,36 +1,35 @@
-# Fly.io Configuration for FitTrack Backend
-# See https://fly.io/docs/reference/configuration/ for more information
+# fly.toml app configuration file generated for fittrack-api on 2025-12-07T17:06:57-08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "fittrack-api"
-primary_region = "iad"  # Change to your preferred region (iad = US East)
+app = 'fittrack-api'
+primary_region = 'sjc'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
+
+[deploy]
+  strategy = 'rolling'
 
 [env]
-  PORT = "8080"
-  FLASK_ENV = "production"
+  FLASK_ENV = 'production'
+  PORT = '8080'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
-[[http_service.checks]]
-  interval = "15s"
-  timeout = "2s"
-  grace_period = "5s"
-  method = "GET"
-  path = "/health"
+  [[http_service.checks]]
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '5s'
+    method = 'GET'
+    path = '/health'
 
 [[vm]]
-  cpu_kind = "shared"
-  cpus = 1
-  memory_mb = 256
-
-[deploy]
-  strategy = "rolling"
-
+  size = 'shared-cpu-1x'

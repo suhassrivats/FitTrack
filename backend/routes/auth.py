@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models import db
 from models.user import User
-from models.nutrition import NutritionGoal
 import secrets
 from datetime import datetime, timedelta
 
@@ -34,11 +33,6 @@ def register():
     user.set_password(data['password'])
     
     db.session.add(user)
-    db.session.commit()
-    
-    # Create default nutrition goal
-    nutrition_goal = NutritionGoal(user_id=user.id)
-    db.session.add(nutrition_goal)
     db.session.commit()
     
     # Generate access token (convert user.id to string for JWT)

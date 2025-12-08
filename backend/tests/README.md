@@ -43,7 +43,6 @@ pytest --cov=. --cov-report=html
 - `test_auth.py` - Authentication and authorization tests
 - `test_workouts.py` - Workout management tests
 - `test_exercises.py` - Exercise management tests
-- `test_nutrition.py` - Nutrition tracking tests
 - `test_profile.py` - User profile tests
 - `test_classes.py` - Class management tests
 

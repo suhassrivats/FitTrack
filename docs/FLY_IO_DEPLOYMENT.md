@@ -35,18 +35,18 @@ flyctl auth login
 
 This will open a browser window for authentication.
 
-## Step 2: Create PostgreSQL Database
+## Step 2: Database Setup
 
-Fly.io offers managed PostgreSQL databases. Create one:
+This deployment uses **SQLite** for the database. The database file will be stored in the `instance/` directory.
 
+**Note:** SQLite works well for single-instance deployments. For production with multiple instances or high traffic, consider using PostgreSQL (see alternative setup below).
+
+**Alternative: Using PostgreSQL**
+If you prefer PostgreSQL for production:
 ```bash
 flyctl postgres create --name fittrack-db --region iad --vm-size shared-cpu-1x --volume-size 10
+flyctl postgres attach fittrack-db --app fittrack-api
 ```
-
-Note the connection details from the output. You'll need the `DATABASE_URL` later.
-
-**Alternative: Use an existing database**
-If you already have a PostgreSQL database, you can skip this step and use its connection string.
 
 ## Step 3: Configure Your App
 
@@ -186,7 +186,7 @@ The following environment variables are configured:
 | Variable | Source | Description |
 |----------|--------|-------------|
 | `PORT` | Auto-set by Fly.io | Port the app listens on (8080) |
-| `DATABASE_URL` | Auto-set when attaching PostgreSQL | PostgreSQL connection string |
+| `DATABASE_URL` | Optional | PostgreSQL connection string (if using PostgreSQL, otherwise SQLite is used) |
 | `SECRET_KEY` | Manual (via secrets) | Flask session secret key |
 | `JWT_SECRET_KEY` | Manual (via secrets) | JWT token signing key |
 | `CORS_ORIGINS` | Optional (via secrets) | Allowed CORS origins (default: *) |
@@ -240,18 +240,32 @@ flyctl info --app fittrack-api
 
 ## Database Management
 
-### Access PostgreSQL Database
+### SQLite (Default)
+The SQLite database is stored in `instance/fittrack.db` within the container.
+
+**Access database:**
 ```bash
+flyctl ssh console --app fittrack-api
+# Inside container:
+sqlite3 instance/fittrack.db
+```
+
+**Backup database:**
+```bash
+flyctl ssh console --app fittrack-api -C "cp instance/fittrack.db /tmp/fittrack-backup.db"
+flyctl sftp shell --app fittrack-api
+# Then download /tmp/fittrack-backup.db
+```
+
+### PostgreSQL (If using)
+```bash
+# Access database
 flyctl postgres connect -a fittrack-db
-```
 
-### Create Database Backup
-```bash
+# Create backup
 flyctl postgres backup create -a fittrack-db
-```
 
-### View Database Info
-```bash
+# View database info
 flyctl postgres status -a fittrack-db
 ```
 
@@ -275,8 +289,9 @@ flyctl status --app fittrack-api
 3. Check database connection: `flyctl postgres status -a fittrack-db`
 
 ### Database Connection Issues
-1. Verify DATABASE_URL is set: `flyctl secrets list --app fittrack-api`
-2. Test database connection: `flyctl postgres connect -a fittrack-db`
+1. **SQLite (Default):** Database is stored in `instance/fittrack.db`. If missing, run `./init-db.sh fittrack-api`
+2. **PostgreSQL:** Verify DATABASE_URL is set: `flyctl secrets list --app fittrack-api`
+3. **PostgreSQL:** Test connection: `flyctl postgres connect -a fittrack-db`
 
 ### Port Issues
 - Fly.io uses port 8080 by default (configured in `fly.toml`)
@@ -302,7 +317,7 @@ The app will be updated with zero-downtime deployment.
 
 - [x] Removed dev login/user seeding
 - [x] Set strong SECRET_KEY and JWT_SECRET_KEY
-- [x] Configured PostgreSQL database
+- [x] Database configured (SQLite or PostgreSQL)
 - [x] Set up CORS origins (if needed)
 - [x] Initialized database schema
 - [x] Tested health endpoint
@@ -310,6 +325,7 @@ The app will be updated with zero-downtime deployment.
 - [x] Configured monitoring/logging
 - [ ] Set up custom domain (optional)
 - [ ] Configure SSL certificate (auto-handled by Fly.io)
+- [ ] Consider PostgreSQL for multi-instance deployments (if using SQLite)
 
 ## Custom Domain Setup (Optional)
 
@@ -325,13 +341,16 @@ flyctl certs add yourdomain.com --app fittrack-api
 
 Fly.io offers a generous free tier:
 - **Free Tier**: 3 shared-cpu-1x VMs with 256MB RAM each
-- **PostgreSQL**: Free tier includes 3GB storage
+- **SQLite**: No additional cost (included with app)
+- **PostgreSQL**: Free tier includes 3GB storage (if using)
 - **Bandwidth**: 160GB outbound data transfer per month
 
 For production, consider:
 - Upgrading VM size for better performance
-- Adding more instances for redundancy
-- Scaling PostgreSQL for larger datasets
+- Adding more instances for redundancy (requires PostgreSQL, not SQLite)
+- Using PostgreSQL for multi-instance deployments
+
+**Note:** SQLite works well for single-instance deployments. If you need multiple instances or high availability, use PostgreSQL.
 
 See https://fly.io/docs/about/pricing/ for details.
 
