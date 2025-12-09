@@ -1,11 +1,88 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models import db
 from models.user import User
 import secrets
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+
+def send_password_reset_email(email, reset_token):
+    """Send password reset email to user"""
+    # Get email configuration from environment
+    smtp_host = os.getenv('SMTP_HOST')
+    smtp_port = int(os.getenv('SMTP_PORT', '587'))
+    smtp_user = os.getenv('SMTP_USER')
+    smtp_password = os.getenv('SMTP_PASSWORD')
+    smtp_from = os.getenv('SMTP_FROM', smtp_user)
+    app_url = os.getenv('APP_URL', 'https://fittrack-api.fly.dev')
+    
+    # If SMTP is not configured, log the token for development
+    if not smtp_host or not smtp_user or not smtp_password:
+        current_app.logger.warning(
+            f"SMTP not configured. Password reset token for {email}: {reset_token}\n"
+            f"Reset link: {app_url}/reset-password?token={reset_token}"
+        )
+        return
+    
+    # Create reset link
+    reset_link = f"{app_url}/reset-password?token={reset_token}"
+    
+    # Create email message
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = 'FitTrack - Password Reset Request'
+    msg['From'] = smtp_from
+    msg['To'] = email
+    
+    # Email body
+    text = f"""Hello,
+
+You requested to reset your password for your FitTrack account.
+
+Click the following link to reset your password:
+{reset_link}
+
+This link will expire in 1 hour.
+
+If you didn't request this, please ignore this email.
+
+Best regards,
+FitTrack Team"""
+    
+    html = f"""<html>
+  <body>
+    <h2>Password Reset Request</h2>
+    <p>Hello,</p>
+    <p>You requested to reset your password for your FitTrack account.</p>
+    <p><a href="{reset_link}" style="background-color: #13ec5b; color: #102216; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+    <p>Or copy this link: {reset_link}</p>
+    <p><small>This link will expire in 1 hour.</small></p>
+    <p>If you didn't request this, please ignore this email.</p>
+    <p>Best regards,<br>FitTrack Team</p>
+  </body>
+</html>"""
+    
+    # Attach parts
+    part1 = MIMEText(text, 'plain')
+    part2 = MIMEText(html, 'html')
+    msg.attach(part1)
+    msg.attach(part2)
+    
+    # Send email
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        current_app.logger.info(f"Password reset email sent to {email}")
+    except Exception as e:
+        current_app.logger.error(f"Failed to send email: {str(e)}")
+        raise
 
 @bp.route('/register', methods=['POST'])
 def register():
@@ -127,13 +204,33 @@ def forgot_password():
             'email': user.email,
             'expires_at': datetime.utcnow() + timedelta(hours=1)
         }
-        # In production, send email with reset link containing the token
-        # For now, we'll just return success
-        # TODO: Send email with reset link: /reset-password?token={reset_token}
+        
+        # Send password reset email
+        email_sent = False
+        try:
+            send_password_reset_email(user.email, reset_token)
+            email_sent = True
+        except Exception as e:
+            # Log error but don't fail the request (security: don't reveal if email exists)
+            current_app.logger.error(f"Failed to send password reset email: {str(e)}")
+        
+        # In development, log the token so it can be retrieved from logs
+        if os.getenv('FLASK_ENV') == 'development' or not email_sent:
+            current_app.logger.info(
+                f"Password reset token for {user.email}: {reset_token}\n"
+                f"Reset URL: {os.getenv('APP_URL', 'https://fittrack-api.fly.dev')}/reset-password?token={reset_token}"
+            )
     
-    return jsonify({
+    response = {
         'message': 'If an account exists with this email, you will receive password reset instructions.'
-    }), 200
+    }
+    
+    # In development mode, include token in response for testing (remove in production!)
+    if os.getenv('FLASK_ENV') == 'development' and user:
+        response['debug_token'] = reset_token
+        response['debug_message'] = 'Check server logs for reset token (development mode only)'
+    
+    return jsonify(response), 200
 
 @bp.route('/reset-password', methods=['POST'])
 def reset_password():
