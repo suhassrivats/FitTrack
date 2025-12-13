@@ -127,6 +127,26 @@ const DashboardScreen = ({ navigation, route }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
+        {/* Quick Access Cards */}
+        <View style={styles.quickAccessSection}>
+          <TouchableOpacity
+            style={styles.quickAccessCard}
+            onPress={() => navigation.navigate('LogWorkout')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.quickAccessLabel}>Workout Log</Text>
+            <Text style={styles.quickAccessValue}>Start</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.quickAccessCard}
+            onPress={() => navigation.navigate('MacroDashboard')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.quickAccessLabel}>Macros Log</Text>
+            <Text style={styles.quickAccessValue}>Track</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>

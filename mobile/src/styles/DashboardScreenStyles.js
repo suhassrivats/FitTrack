@@ -2,6 +2,70 @@ import { StyleSheet } from 'react-native';
 import colors from '../styles/colors';
 
 export const styles = StyleSheet.create({
+  tabNavigation: {
+    flexDirection: 'row',
+    backgroundColor: colors.backgroundDark,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cardBorder,
+    paddingHorizontal: 16,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 8,
+    position: 'relative',
+  },
+  tabActive: {
+    // Active tab styling
+  },
+  tabLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  tabLabelActive: {
+    color: colors.textPrimary,
+    fontWeight: 'bold',
+  },
+  tabUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: colors.primary,
+    borderRadius: 2,
+  },
+  quickAccessSection: {
+    flexDirection: 'row',
+    gap: 16,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  quickAccessCard: {
+    flex: 1,
+    backgroundColor: colors.cardBg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+  },
+  quickAccessCardDisabled: {
+    opacity: 0.6,
+  },
+  quickAccessLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  quickAccessValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+  },
   header: {
     padding: 16,
     paddingTop: 60,
@@ -30,6 +94,7 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 16,
     paddingHorizontal: 16,
+    paddingTop: 24,
     marginBottom: 24,
   },
   statCard: {

@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
       "backgroundColor": "#102216"
     },
     "assetBundlePatterns": [
@@ -13,13 +16,32 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fittrack.mobile"
+      "bundleIdentifier": "com.fittrack.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized workout recommendations.",
+        "NSCameraUsageDescription": "This app needs access to your camera to take profile photos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select profile photos."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.fittrack.mobile"
+      "package": "com.fittrack.mobile",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#102216"
+      }
     },
     "web": {
       "bundler": "webpack"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
     }
   }
 }

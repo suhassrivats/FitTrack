@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models import db
-from models.user import User
+from models.user import User, PasswordResetToken
 import secrets
 import os
 import smtplib
@@ -179,9 +179,6 @@ def change_password():
     
     return jsonify({'message': 'Password changed successfully'}), 200
 
-# Simple in-memory store for reset tokens (in production, use Redis or database)
-reset_tokens = {}
-
 @bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     """Request password reset"""
@@ -196,14 +193,29 @@ def forgot_password():
     # For security, always return success even if user doesn't exist
     # This prevents email enumeration attacks
     if user:
+        # Clean up expired tokens for this user
+        PasswordResetToken.query.filter(
+            PasswordResetToken.user_id == user.id,
+            PasswordResetToken.expires_at < datetime.utcnow()
+        ).delete()
+        
+        # Invalidate any existing unused tokens for this user
+        PasswordResetToken.query.filter(
+            PasswordResetToken.user_id == user.id,
+            PasswordResetToken.used == False
+        ).update({'used': True})
+        
         # Generate reset token
         reset_token = secrets.token_urlsafe(32)
-        # Store token with expiration (1 hour)
-        reset_tokens[reset_token] = {
-            'user_id': user.id,
-            'email': user.email,
-            'expires_at': datetime.utcnow() + timedelta(hours=1)
-        }
+        
+        # Store token in database with expiration (1 hour)
+        reset_token_obj = PasswordResetToken(
+            token=reset_token,
+            user_id=user.id,
+            expires_at=datetime.utcnow() + timedelta(hours=1)
+        )
+        db.session.add(reset_token_obj)
+        db.session.commit()
         
         # Send password reset email
         email_sent = False
@@ -242,21 +254,24 @@ def reset_password():
     
     token = data['token']
     
-    # Check if token exists and is valid
-    if token not in reset_tokens:
+    # Find token in database
+    reset_token_obj = PasswordResetToken.query.filter_by(token=token).first()
+    
+    if not reset_token_obj:
         return jsonify({'error': 'Invalid or expired reset token'}), 400
     
-    token_data = reset_tokens[token]
-    
-    # Check if token has expired
-    if datetime.utcnow() > token_data['expires_at']:
-        del reset_tokens[token]
-        return jsonify({'error': 'Reset token has expired'}), 400
+    # Check if token is valid (not expired and not used)
+    if not reset_token_obj.is_valid():
+        if reset_token_obj.used:
+            return jsonify({'error': 'This reset token has already been used'}), 400
+        else:
+            return jsonify({'error': 'Reset token has expired'}), 400
     
     # Find user
-    user = User.query.get(token_data['user_id'])
+    user = User.query.get(reset_token_obj.user_id)
     if not user:
-        del reset_tokens[token]
+        reset_token_obj.used = True
+        db.session.commit()
         return jsonify({'error': 'User not found'}), 404
     
     # Validate new password
@@ -265,10 +280,10 @@ def reset_password():
     
     # Set new password
     user.set_password(data['new_password'])
-    db.session.commit()
     
-    # Remove used token
-    del reset_tokens[token]
+    # Mark token as used
+    reset_token_obj.used = True
+    db.session.commit()
     
     return jsonify({'message': 'Password reset successfully'}), 200
 

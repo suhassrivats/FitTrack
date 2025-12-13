@@ -1,6 +1,32 @@
 from models import db
-from datetime import datetime
+from datetime import datetime, timedelta
 import bcrypt
+
+class PasswordResetToken(db.Model):
+    """Password reset token model for persistent storage"""
+    __tablename__ = 'password_reset_tokens'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref='password_reset_tokens')
+    
+    def is_valid(self):
+        """Check if token is valid (not expired and not used)"""
+        return not self.used and datetime.utcnow() < self.expires_at
+    
+    @classmethod
+    def cleanup_expired(cls):
+        """Delete expired tokens"""
+        expired = cls.query.filter(cls.expires_at < datetime.utcnow()).all()
+        for token in expired:
+            db.session.delete(token)
+        db.session.commit()
 
 class User(db.Model):
     __tablename__ = 'users'

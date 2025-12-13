@@ -10,7 +10,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
-import DashboardScreen from './src/screens/DashboardScreen';
+import UnifiedDashboardScreen from './src/screens/UnifiedDashboardScreen';
+import MacroDashboardScreen from './src/screens/MacroDashboardScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import LogWorkoutScreen from './src/screens/LogWorkoutScreen';
 import ExercisesScreen from './src/screens/ExercisesScreen';
@@ -28,14 +29,18 @@ import EditAssignedWorkoutScreen from './src/screens/EditAssignedWorkoutScreen';
 import LogAssignedWorkoutScreen from './src/screens/LogAssignedWorkoutScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
+import MealPlannerScreen from './src/screens/MealPlannerScreen';
+import RecipesScreen from './src/screens/RecipesScreen';
+import NutritionStatsScreen from './src/screens/NutritionStatsScreen';
 
 // Import API configuration
 import { setAuthToken } from './src/services/api';
+import { DashboardProvider, useDashboard } from './src/contexts/DashboardContext';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function MainTabs() {
+function WorkoutTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -57,7 +62,7 @@ function MainTabs() {
     >
       <Tab.Screen
         name="Home"
-        component={DashboardScreen}
+        component={UnifiedDashboardScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Icon name="home" size={size} color={color} />
@@ -113,6 +118,84 @@ function MainTabs() {
   );
 }
 
+function MacroTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#102216',
+          borderTopColor: 'rgba(255, 255, 255, 0.1)',
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 70,
+        },
+        tabBarActiveTintColor: '#13ec5b',
+        tabBarInactiveTintColor: '#6b7280',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={UnifiedDashboardScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="MealPlanner"
+        component={MealPlannerScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="calendar-clock" size={size} color={color} />
+          ),
+          tabBarLabel: 'Planner',
+        }}
+      />
+      <Tab.Screen
+        name="Recipes"
+        component={RecipesScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="book-open-variant" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="NutritionStats"
+        component={NutritionStatsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="chart-line" size={size} color={color} />
+          ),
+          tabBarLabel: 'Stats',
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="account" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+function MainTabs() {
+  const { activeMode } = useDashboard();
+  
+  // Conditionally render different tabs based on active mode
+  return activeMode === 'macros' ? <MacroTabs /> : <WorkoutTabs />;
+}
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,7 +246,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <DashboardProvider>
       <StatusBar style="light" />
       <NavigationContainer>
         <Stack.Navigator
@@ -181,6 +264,7 @@ export default function App() {
           ) : (
             <>
               <Stack.Screen name="Main" component={MainTabs} />
+              <Stack.Screen name="MacroDashboard" component={MacroDashboardScreen} />
               <Stack.Screen name="LogWorkout" component={LogWorkoutScreen} />
               <Stack.Screen name="LogAssignedWorkout" component={LogAssignedWorkoutScreen} />
               <Stack.Screen name="CreateRoutine" component={CreateRoutineScreen} />
@@ -197,7 +281,7 @@ export default function App() {
           )}
         </Stack.Navigator>
       </NavigationContainer>
-    </>
+    </DashboardProvider>
   );
 }
 
