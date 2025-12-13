@@ -1,7 +1,7 @@
 import pytest
 import json
 from models import db
-from models.user import User
+from models.user import User, PasswordResetToken
 from datetime import datetime, timedelta
 
 class TestRegister:
@@ -231,9 +231,9 @@ class TestForgotPassword:
     
     def test_forgot_password_success(self, client, test_user):
         """Test successful forgot password request"""
-        from routes.auth import reset_tokens
-        # Clear any existing tokens
-        reset_tokens.clear()
+        # Clear any existing tokens for this user
+        PasswordResetToken.query.filter_by(user_id=test_user.id).delete()
+        db.session.commit()
         
         response = client.post('/api/auth/forgot-password',
             json={'email': 'test@example.com'}
@@ -241,13 +241,15 @@ class TestForgotPassword:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert 'message' in data
-        # Token should be generated
-        assert len(reset_tokens) == 1
+        # Token should be generated in database
+        token_count = PasswordResetToken.query.filter_by(user_id=test_user.id, used=False).count()
+        assert token_count == 1
     
     def test_forgot_password_nonexistent_email(self, client):
         """Test forgot password with non-existent email (should still return success)"""
-        from routes.auth import reset_tokens
-        reset_tokens.clear()
+        # Clear any existing tokens
+        PasswordResetToken.query.delete()
+        db.session.commit()
         
         response = client.post('/api/auth/forgot-password',
             json={'email': 'nonexistent@example.com'}
@@ -257,7 +259,8 @@ class TestForgotPassword:
         data = json.loads(response.data)
         assert 'message' in data
         # No token should be generated
-        assert len(reset_tokens) == 0
+        token_count = PasswordResetToken.query.filter_by(used=False).count()
+        assert token_count == 0
     
     def test_forgot_password_missing_email(self, client):
         """Test forgot password without email"""
@@ -274,17 +277,20 @@ class TestResetPassword:
     
     def test_reset_password_success(self, client, test_user):
         """Test successful password reset"""
-        from routes.auth import reset_tokens
-        reset_tokens.clear()
+        # Clear any existing tokens
+        PasswordResetToken.query.filter_by(user_id=test_user.id).delete()
+        db.session.commit()
         
-        # Generate a token
+        # Generate a token in database
         import secrets
         reset_token = secrets.token_urlsafe(32)
-        reset_tokens[reset_token] = {
-            'user_id': test_user.id,
-            'email': test_user.email,
-            'expires_at': datetime.utcnow() + timedelta(hours=1)
-        }
+        reset_token_obj = PasswordResetToken(
+            token=reset_token,
+            user_id=test_user.id,
+            expires_at=datetime.utcnow() + timedelta(hours=1)
+        )
+        db.session.add(reset_token_obj)
+        db.session.commit()
         
         response = client.post('/api/auth/reset-password',
             json={
@@ -295,8 +301,9 @@ class TestResetPassword:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert 'message' in data
-        # Token should be removed after use
-        assert reset_token not in reset_tokens
+        # Token should be marked as used after use
+        db.session.refresh(reset_token_obj)
+        assert reset_token_obj.used == True
         
         # Verify new password works
         login_response = client.post('/api/auth/login',
@@ -309,8 +316,9 @@ class TestResetPassword:
     
     def test_reset_password_invalid_token(self, client):
         """Test reset password with invalid token"""
-        from routes.auth import reset_tokens
-        reset_tokens.clear()
+        # Clear any existing tokens
+        PasswordResetToken.query.delete()
+        db.session.commit()
         
         response = client.post('/api/auth/reset-password',
             json={
@@ -324,17 +332,20 @@ class TestResetPassword:
     
     def test_reset_password_expired_token(self, client, test_user):
         """Test reset password with expired token"""
-        from routes.auth import reset_tokens
-        reset_tokens.clear()
+        # Clear any existing tokens
+        PasswordResetToken.query.filter_by(user_id=test_user.id).delete()
+        db.session.commit()
         
-        # Generate an expired token
+        # Generate an expired token in database
         import secrets
         reset_token = secrets.token_urlsafe(32)
-        reset_tokens[reset_token] = {
-            'user_id': test_user.id,
-            'email': test_user.email,
-            'expires_at': datetime.utcnow() - timedelta(hours=1)  # Expired
-        }
+        reset_token_obj = PasswordResetToken(
+            token=reset_token,
+            user_id=test_user.id,
+            expires_at=datetime.utcnow() - timedelta(hours=1)  # Expired
+        )
+        db.session.add(reset_token_obj)
+        db.session.commit()
         
         response = client.post('/api/auth/reset-password',
             json={
@@ -346,21 +357,25 @@ class TestResetPassword:
         data = json.loads(response.data)
         assert 'error' in data
         assert 'expired' in data['error'].lower()
-        # Token should be removed
-        assert reset_token not in reset_tokens
+        # Token should still exist but be invalid
+        db.session.refresh(reset_token_obj)
+        assert not reset_token_obj.is_valid()
     
     def test_reset_password_short_password(self, client, test_user):
         """Test reset password with password too short"""
-        from routes.auth import reset_tokens
-        reset_tokens.clear()
+        # Clear any existing tokens
+        PasswordResetToken.query.filter_by(user_id=test_user.id).delete()
+        db.session.commit()
         
         import secrets
         reset_token = secrets.token_urlsafe(32)
-        reset_tokens[reset_token] = {
-            'user_id': test_user.id,
-            'email': test_user.email,
-            'expires_at': datetime.utcnow() + timedelta(hours=1)
-        }
+        reset_token_obj = PasswordResetToken(
+            token=reset_token,
+            user_id=test_user.id,
+            expires_at=datetime.utcnow() + timedelta(hours=1)
+        )
+        db.session.add(reset_token_obj)
+        db.session.commit()
         
         response = client.post('/api/auth/reset-password',
             json={
@@ -372,6 +387,9 @@ class TestResetPassword:
         data = json.loads(response.data)
         assert 'error' in data
         assert '6 characters' in data['error']
+        # Token should still be valid (not used) since password was invalid
+        db.session.refresh(reset_token_obj)
+        assert reset_token_obj.is_valid()
     
     def test_reset_password_missing_fields(self, client):
         """Test reset password with missing fields"""

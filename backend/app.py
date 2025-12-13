@@ -66,7 +66,7 @@ from models import db
 db.init_app(app)
 
 # Import routes
-from routes import auth, workouts, exercises, profile, classes
+from routes import auth, workouts, exercises, profile, classes, macros
 
 # Register blueprints
 app.register_blueprint(auth.bp)
@@ -74,6 +74,7 @@ app.register_blueprint(workouts.bp)
 app.register_blueprint(exercises.bp)
 app.register_blueprint(profile.bp)
 app.register_blueprint(classes.bp)
+app.register_blueprint(macros.bp)
 
 @app.route('/')
 def index():
@@ -85,7 +86,8 @@ def index():
             'workouts': '/api/workouts',
             'exercises': '/api/exercises',
             'profile': '/api/profile',
-            'classes': '/api/classes'
+            'classes': '/api/classes',
+            'macros': '/api/macros'
         }
     }
 

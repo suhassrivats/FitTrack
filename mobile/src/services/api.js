@@ -127,5 +127,16 @@ export const classAPI = {
   getClassStats: (classId) => api.get(`/classes/${classId}/stats`),
 };
 
+// Macro APIs
+export const macroAPI = {
+  getDashboard: (date) => api.get('/macros/dashboard', { params: { date } }),
+  getGoals: () => api.get('/macros/goals'),
+  updateGoals: (data) => api.put('/macros/goals', data),
+  getMeals: (date) => api.get('/macros/meals', { params: { date } }),
+  createMeal: (data) => api.post('/macros/meals', data),
+  updateMeal: (id, data) => api.put(`/macros/meals/${id}`, data),
+  deleteMeal: (id) => api.delete(`/macros/meals/${id}`),
+};
+
 export default api;
 
