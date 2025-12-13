@@ -30,6 +30,12 @@ export const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: 'bold',
   },
+  tabDisabled: {
+    opacity: 0.5,
+  },
+  tabLabelDisabled: {
+    color: colors.textTertiary,
+  },
   tabUnderline: {
     position: 'absolute',
     bottom: 0,
