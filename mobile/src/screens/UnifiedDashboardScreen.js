@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -37,8 +36,6 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
       setActiveMode(activeTab);
     }
   }, [activeTab, setActiveMode]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
   const [userName, setUserName] = useState('');
 
   // Load user info
@@ -50,25 +47,12 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
 
   const loadUserInfo = async () => {
     try {
-      setLoading(true);
       const statsRes = await workoutAPI.getStats();
-      setStats(statsRes.data.stats);
       setUserName(statsRes.data.stats?.user?.full_name || statsRes.data.stats?.user?.username || '');
     } catch (error) {
       console.error('Error loading user info:', error);
-    } finally {
-      setLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <View style={globalStyles.centerContent}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={globalStyles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={globalStyles.container}>
@@ -117,7 +101,7 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
 
       {/* Tab Content */}
       {activeTab === 'workout' ? (
-        <WorkoutDashboardContent navigation={navigation} stats={stats} />
+        <WorkoutDashboardContent navigation={navigation} />
       ) : (
         <MacroDashboardContent navigation={navigation} />
       )}
