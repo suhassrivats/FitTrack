@@ -40,9 +40,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-project-id-here"
+        "projectId": "4cbef1a6-db4e-475b-8813-f69f28571b1e"
       }
-    }
+    },
+    "owner": "suhassrivats"
   }
 }
-

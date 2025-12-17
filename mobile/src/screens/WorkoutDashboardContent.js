@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../styles/colors';
 import globalStyles from '../styles/globalStyles';
@@ -15,9 +16,12 @@ import { styles } from '../styles/DashboardScreenStyles';
 const WorkoutDashboardContent = ({ navigation }) => {
   const [routines, setRoutines] = useState([]);
 
-  useEffect(() => {
-    loadWorkoutData();
-  }, []);
+  // Reload routines when screen comes into focus (e.g., after creating a routine)
+  useFocusEffect(
+    useCallback(() => {
+      loadWorkoutData();
+    }, [])
+  );
 
   const loadWorkoutData = async () => {
     try {
