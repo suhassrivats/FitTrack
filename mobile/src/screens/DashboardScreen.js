@@ -244,7 +244,7 @@ const DashboardScreen = ({ navigation, route }) => {
             </View>
           ) : (
             <>
-              {routines.slice(0, 3).map((routine, index) => (
+              {routines.map((routine, index) => (
                 <TouchableOpacity 
                   key={routine.id || index} 
                   style={styles.routineCard}

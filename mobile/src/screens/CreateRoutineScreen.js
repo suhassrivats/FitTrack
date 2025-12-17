@@ -130,8 +130,14 @@ const CreateRoutineScreen = ({ navigation, route }) => {
       const response = await workoutAPI.createRoutine(routineData);
       console.log('Routine saved:', response.data);
 
-      alert(`Routine "${routineName}" created successfully!`);
+      // Navigate back - the UnifiedDashboardScreen will detect focus and refresh
       navigation.goBack();
+      
+      // Use setTimeout to ensure navigation completes before showing alert
+      // This allows the screen to refresh first
+      setTimeout(() => {
+        Alert.alert('Success', `Routine "${routineName}" created successfully!`);
+      }, 500);
     } catch (error) {
       console.error('Error saving routine:', error);
       alert('Failed to save routine. Please try again.');
