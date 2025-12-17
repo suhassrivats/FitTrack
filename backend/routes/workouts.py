@@ -187,7 +187,7 @@ def get_workout_stats():
 def get_routines():
     """Get all routines for current user"""
     user_id = int(get_jwt_identity())
-    routines = Routine.query.filter_by(user_id=user_id).all()
+    routines = Routine.query.filter_by(user_id=user_id).order_by(Routine.created_at.desc()).all()
     
     return jsonify({
         'routines': [r.to_dict() for r in routines]

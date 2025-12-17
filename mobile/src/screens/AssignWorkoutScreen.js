@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { globalStyles } from '../styles/globalStyles';
 import colors from '../styles/colors';
 import Button from '../components/Button';
-import { API_URL } from '../services/api';
+import { exerciseAPI, classAPI } from '../services/api';
 
 const AssignWorkoutScreen = ({ route, navigation }) => {
   const { classId } = route.params;
@@ -23,6 +23,8 @@ const AssignWorkoutScreen = ({ route, navigation }) => {
   const [dueDate, setDueDate] = useState('');
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [availableExercises, setAvailableExercises] = useState([]);
+  const [filteredExercises, setFilteredExercises] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isPickingExercise, setIsPickingExercise] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -32,18 +34,43 @@ const AssignWorkoutScreen = ({ route, navigation }) => {
 
   const loadAvailableExercises = async () => {
     try {
-      const response = await fetch(`${API_URL}/exercises`);
-      const data = await response.json();
-      console.log('Loaded exercises:', data.exercises?.length || 0);
-      setAvailableExercises(data.exercises || []);
+      const response = await exerciseAPI.getExercises();
+      const exercises = response.data.exercises || [];
+      setAvailableExercises(exercises);
+      setFilteredExercises(exercises);
     } catch (error) {
       console.error('Error loading exercises:', error);
-      Alert.alert('Error', 'Failed to load exercises');
+      Alert.alert('Error', 'Failed to load exercises. Please make sure the backend is running.');
     }
   };
 
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredExercises(availableExercises);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = availableExercises.filter(exercise => {
+      const name = exercise.name?.toLowerCase() || '';
+      const description = exercise.description?.toLowerCase() || '';
+      const category = exercise.category?.toLowerCase() || '';
+      const equipment = exercise.equipment?.toLowerCase() || '';
+      const muscleGroups = Array.isArray(exercise.muscle_groups)
+        ? exercise.muscle_groups.join(',').toLowerCase()
+        : exercise.muscle_groups?.toLowerCase() || '';
+
+      return name.includes(query) ||
+        description.includes(query) ||
+        category.includes(query) ||
+        equipment.includes(query) ||
+        muscleGroups.includes(query);
+    });
+
+    setFilteredExercises(filtered);
+  }, [searchQuery, availableExercises]);
+
   const addExerciseToWorkout = (exercise) => {
-    console.log('Adding exercise:', exercise.name);
     setSelectedExercises([
       ...selectedExercises,
       {
@@ -54,6 +81,7 @@ const AssignWorkoutScreen = ({ route, navigation }) => {
       },
     ]);
     setIsPickingExercise(false);
+    setSearchQuery('');
   };
 
   const removeExerciseFromWorkout = (index) => {
@@ -81,45 +109,55 @@ const AssignWorkoutScreen = ({ route, navigation }) => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/classes/${classId}/assign-workout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: workoutName,
-          description: workoutDescription,
-          exercises: selectedExercises,
-          due_date: dueDate || null,
-        }),
+      await classAPI.assignWorkout(classId, {
+        name: workoutName,
+        description: workoutDescription,
+        exercises: selectedExercises,
+        due_date: dueDate || null,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert('Success', 'Workout assigned to all students!', [
-          { text: 'OK', onPress: () => navigation.goBack() }
-        ]);
-      } else {
-        Alert.alert('Error', data.error || 'Failed to assign workout');
-      }
+      Alert.alert('Success', 'Workout assigned to all students!', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
     } catch (error) {
       console.error('Error assigning workout:', error);
-      Alert.alert('Error', 'Failed to assign workout');
+      Alert.alert('Error', error.response?.data?.error || 'Failed to assign workout');
     } finally {
       setLoading(false);
     }
   };
 
   if (isPickingExercise) {
-    // Exercise Picker View
     return (
       <View style={globalStyles.container}>
         <View style={globalStyles.header}>
-          <TouchableOpacity onPress={() => setIsPickingExercise(false)}>
+          <TouchableOpacity onPress={() => {
+            setIsPickingExercise(false);
+            setSearchQuery('');
+          }}>
             <Icon name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={globalStyles.headerTitleCenter}>Select Exercise</Text>
-          <View style={{ width: 24 }} />
+          <View style={styles.headerSpacer} />
         </View>
+
+        {availableExercises.length > 0 && (
+          <View style={styles.searchContainer}>
+            <Icon name="magnify" size={20} color={colors.textTertiary} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search exercises..."
+              placeholderTextColor={colors.textTertiary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchButton}>
+                <Icon name="close-circle" size={20} color={colors.textTertiary} />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         {availableExercises.length === 0 ? (
           <View style={globalStyles.emptyState}>
@@ -136,9 +174,17 @@ const AssignWorkoutScreen = ({ route, navigation }) => {
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
           </View>
+        ) : filteredExercises.length === 0 ? (
+          <View style={globalStyles.emptyState}>
+            <Icon name="dumbbell" size={64} color={colors.textTertiary} />
+            <Text style={globalStyles.emptyStateText}>No exercises found</Text>
+            <Text style={globalStyles.emptyStateSubtext}>
+              Try adjusting your search query
+            </Text>
+          </View>
         ) : (
           <FlatList
-            data={availableExercises}
+            data={filteredExercises}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -171,7 +217,7 @@ const AssignWorkoutScreen = ({ route, navigation }) => {
           <Icon name="arrow-left" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={globalStyles.headerTitleCenter}>Assign Workout</Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
@@ -271,10 +317,9 @@ const AssignWorkoutScreen = ({ route, navigation }) => {
           </Text>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      {/* Bottom Action Bar */}
       <View style={globalStyles.bottomBar}>
         <Button
           title={loading ? 'Assigning...' : `Assign Workout (${selectedExercises.length} exercises)`}
@@ -292,6 +337,12 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  bottomSpacer: {
+    height: 100,
   },
   inputGroup: {
     marginBottom: 24,
@@ -423,6 +474,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.primary,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.cardBg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  clearSearchButton: {
+    padding: 4,
   },
 });
 

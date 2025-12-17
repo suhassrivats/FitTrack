@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { useDashboard } from '../contexts/DashboardContext';
 const UnifiedDashboardScreen = ({ navigation, route }) => {
   const { activeMode: contextMode, setActiveMode } = useDashboard();
   const [activeTab, setActiveTab] = useState(contextMode || 'workout'); // 'workout' or 'macros'
+  const refreshWorkoutContentRef = useRef(null);
   
   // Sync with context on mount (but never allow macros mode)
   useEffect(() => {
@@ -38,12 +39,45 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
   }, [activeTab, setActiveMode]);
   const [userName, setUserName] = useState('');
 
-  // Load user info
+  // Load user info and trigger refresh when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadUserInfo();
+      // Also trigger refresh in WorkoutDashboardContent when screen comes into focus
+      // Add small delay to ensure navigation has completed
+      setTimeout(() => {
+        console.log('UnifiedDashboardScreen focused - triggering refresh');
+        if (refreshWorkoutContentRef.current) {
+          refreshWorkoutContentRef.current();
+        }
+      }, 100);
     }, [])
   );
+
+  // Add navigation listener as backup to refresh when coming back from CreateRoutine
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('UnifiedDashboardScreen navigation focus - triggering refresh');
+      // Trigger refresh in WorkoutDashboardContent
+      if (refreshWorkoutContentRef.current) {
+        refreshWorkoutContentRef.current();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  // Also listen for route params changes (for manual refresh triggers)
+  useEffect(() => {
+    if (route?.params?.refreshRoutines) {
+      console.log('Refresh routines param detected - triggering refresh');
+      if (refreshWorkoutContentRef.current) {
+        refreshWorkoutContentRef.current();
+      }
+      // Clear the param to prevent infinite loops
+      navigation.setParams({ refreshRoutines: false });
+    }
+  }, [route?.params?.refreshRoutines, navigation]);
 
   const loadUserInfo = async () => {
     try {
@@ -101,7 +135,10 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
 
       {/* Tab Content */}
       {activeTab === 'workout' ? (
-        <WorkoutDashboardContent navigation={navigation} />
+        <WorkoutDashboardContent 
+          navigation={navigation} 
+          refreshRef={refreshWorkoutContentRef}
+        />
       ) : (
         <MacroDashboardContent navigation={navigation} />
       )}
