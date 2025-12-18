@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  AppState,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -26,7 +25,7 @@ const RegisterScreen = ({ navigation }) => {
     username: '',
     password: '',
     confirmPassword: '',
-    role: 'student', // Default to 'student'
+    role: 'student',
   });
   const [errors, setErrors] = useState({});
 
@@ -73,19 +72,18 @@ const RegisterScreen = ({ navigation }) => {
           };
 
       const response = await endpoint(data);
-      
+
       if (response.data.access_token) {
         console.log('Login successful, saving token...');
         await AsyncStorage.setItem('authToken', response.data.access_token);
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
         setAuthToken(response.data.access_token);
         console.log('Token saved, auth state should update shortly');
-        
-        // App.js polls every second and will detect the change
-        // User will be automatically navigated to Main screen
       }
     } catch (error) {
-      alert(error.response?.data?.error || 'Something went wrong. Please try again.');
+      const message =
+        error.response?.data?.error || 'Something went wrong. Please try again.';
+      Alert.alert('Error', message);
     } finally {
       setLoading(false);
     }
@@ -93,7 +91,9 @@ const RegisterScreen = ({ navigation }) => {
 
   return (
     <ImageBackground
-      source={{ uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800' }}
+      source={{
+        uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
+      }}
       style={styles.container}
       resizeMode="cover"
     >
@@ -150,7 +150,9 @@ const RegisterScreen = ({ navigation }) => {
                 label="Username"
                 placeholder="Choose a username"
                 value={formData.username}
-                onChangeText={(text) => setFormData({ ...formData, username: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, username: text })
+                }
                 autoCapitalize="none"
                 error={errors.username}
               />
@@ -170,7 +172,9 @@ const RegisterScreen = ({ navigation }) => {
                 label="Confirm Password"
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
-                onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, confirmPassword: text })
+                }
                 secureTextEntry
                 error={errors.confirmPassword}
               />
@@ -185,7 +189,9 @@ const RegisterScreen = ({ navigation }) => {
                       styles.roleToggleButton,
                       formData.role === 'student' && styles.roleToggleButtonActive,
                     ]}
-                    onPress={() => setFormData({ ...formData, role: 'student' })}
+                    onPress={() =>
+                      setFormData({ ...formData, role: 'student' })
+                    }
                   >
                     <Text
                       style={[
@@ -199,14 +205,18 @@ const RegisterScreen = ({ navigation }) => {
                   <TouchableOpacity
                     style={[
                       styles.roleToggleButton,
-                      formData.role === 'instructor' && styles.roleToggleButtonActive,
+                      formData.role === 'instructor' &&
+                        styles.roleToggleButtonActive,
                     ]}
-                    onPress={() => setFormData({ ...formData, role: 'instructor' })}
+                    onPress={() =>
+                      setFormData({ ...formData, role: 'instructor' })
+                    }
                   >
                     <Text
                       style={[
                         styles.roleToggleText,
-                        formData.role === 'instructor' && styles.roleToggleTextActive,
+                        formData.role === 'instructor' &&
+                          styles.roleToggleTextActive,
                       ]}
                     >
                       Instructor
@@ -415,4 +425,5 @@ const styles = StyleSheet.create({
 });
 
 export default RegisterScreen;
+
 

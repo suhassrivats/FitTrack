@@ -197,7 +197,7 @@ const MacroDashboardScreen = ({ navigation }) => {
             style={styles.adjustButton}
             onPress={() => {
               // TODO: Navigate to plan adjustment screen
-              Alert.alert('Coming Soon', 'Plan adjustment feature coming soon!');
+              // Placeholder alert removed after testing.
             }}
           >
             <Text style={styles.adjustButtonText}>Adjust Plan</Text>
@@ -364,7 +364,7 @@ const MacroDashboardScreen = ({ navigation }) => {
               style={styles.addFoodButton}
               onPress={() => {
                 // TODO: Navigate to add meal screen
-                Alert.alert('Coming Soon', 'Add meal feature coming soon!');
+                // Placeholder alert removed after testing.
               }}
             >
               <Text style={styles.addFoodButtonText}>Add Food</Text>
@@ -383,7 +383,7 @@ const MacroDashboardScreen = ({ navigation }) => {
                 style={styles.mealCard}
                 onPress={() => {
                   // TODO: Navigate to meal details/edit screen
-                  Alert.alert('Meal', `${meal.name}\n${meal.description || ''}`);
+                  // Placeholder alert removed after testing.
                 }}
               >
                 <View style={styles.mealIcon}>

@@ -27,9 +27,16 @@
         "resourceClass": "m-medium",
         "distribution": "internal"
       }
+    },
+    "testflight": {
+      "ios": {
+        "resourceClass": "m-medium",
+        "distribution": "store"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "testflight": {}
   }
 }
