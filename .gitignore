@@ -34,6 +34,7 @@ mobile/node_modules/
 mobile/.expo/
 mobile/.expo-shared/
 mobile/dist/
+mobile/ios/
 mobile/npm-debug.*
 mobile/*.jks
 mobile/*.p8
