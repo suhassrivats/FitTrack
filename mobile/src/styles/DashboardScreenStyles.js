@@ -242,7 +242,7 @@ export const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 40,
     left: 20,
     right: 20,
   },
