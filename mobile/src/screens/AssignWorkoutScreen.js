@@ -110,15 +110,15 @@ const AssignWorkoutScreen = ({ route, navigation }) => {
     try {
       setLoading(true);
       await classAPI.assignWorkout(classId, {
-        name: workoutName,
-        description: workoutDescription,
-        exercises: selectedExercises,
-        due_date: dueDate || null,
+          name: workoutName,
+          description: workoutDescription,
+          exercises: selectedExercises,
+          due_date: dueDate || null,
       });
 
-      Alert.alert('Success', 'Workout assigned to all students!', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+        Alert.alert('Success', 'Workout assigned to all students!', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
     } catch (error) {
       console.error('Error assigning workout:', error);
       Alert.alert('Error', error.response?.data?.error || 'Failed to assign workout');

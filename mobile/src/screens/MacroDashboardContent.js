@@ -150,14 +150,17 @@ const MacroDashboardContent = ({ navigation }) => {
         </View>
         <TouchableOpacity 
           style={styles.adjustButton}
-          onPress={() => Alert.alert('Coming Soon', 'Plan adjustment feature coming soon!')}
+          onPress={() => {
+            // TODO: Navigate to plan adjustment screen
+            // Placeholder alert removed after testing.
+          }}
         >
           <Text style={styles.adjustButtonText}>Adjust Plan</Text>
         </TouchableOpacity>
       </View>
 
       {/* Daily Progress */}
-      <View style={styles.section}>
+        <View style={styles.section}>
         <Text style={styles.sectionTitle}>Daily Progress</Text>
         <View style={styles.progressBarContainer}>
           <View style={[styles.progressBar, { width: `${dailyProgress.percentage}%` }]} />
@@ -305,7 +308,10 @@ const MacroDashboardContent = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Today's Meals</Text>
           <TouchableOpacity 
             style={styles.addFoodButton}
-            onPress={() => Alert.alert('Coming Soon', 'Add meal feature coming soon!')}
+            onPress={() => {
+              // TODO: Navigate to add meal screen
+              // Placeholder alert removed after testing.
+            }}
           >
             <Text style={styles.addFoodButtonText}>Add Food</Text>
           </TouchableOpacity>
@@ -321,7 +327,10 @@ const MacroDashboardContent = ({ navigation }) => {
             <TouchableOpacity 
               key={meal.id} 
               style={styles.mealCard}
-              onPress={() => Alert.alert('Meal', `${meal.name}\n${meal.description || ''}`)}
+              onPress={() => {
+                // TODO: Navigate to meal details/edit screen
+                // Placeholder alert removed after testing.
+              }}
             >
               <View style={styles.mealIcon}>
                 <Icon name={getMealIcon(meal.meal_type)} size={24} color={colors.primary} />

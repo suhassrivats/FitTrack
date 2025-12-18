@@ -14,7 +14,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../styles/colors';
 import globalStyles from '../styles/globalStyles';
 import Button from '../components/Button';
-import Input from '../components/Input';
 import { workoutAPI, exerciseAPI } from '../services/api';
 
 const CreateRoutineScreen = ({ navigation, route }) => {
@@ -49,20 +48,16 @@ const CreateRoutineScreen = ({ navigation, route }) => {
       setFilteredExercises(availableExercises);
     } else {
       const query = searchQuery.toLowerCase();
-      const filtered = availableExercises.filter(exercise => {
-        // Search in name
+      const filtered = availableExercises.filter((exercise) => {
         if (exercise.name && exercise.name.toLowerCase().includes(query)) {
           return true;
         }
-        // Search in description
         if (exercise.description && exercise.description.toLowerCase().includes(query)) {
           return true;
         }
-        // Search in category
         if (exercise.category && exercise.category.toLowerCase().includes(query)) {
           return true;
         }
-        // Search in muscle groups (can be array or comma-separated string)
         if (exercise.muscle_groups) {
           const muscleGroupsStr = Array.isArray(exercise.muscle_groups)
             ? exercise.muscle_groups.join(',').toLowerCase()
@@ -71,7 +66,6 @@ const CreateRoutineScreen = ({ navigation, route }) => {
             return true;
           }
         }
-        // Search in equipment
         if (exercise.equipment && exercise.equipment.toLowerCase().includes(query)) {
           return true;
         }
@@ -107,12 +101,12 @@ const CreateRoutineScreen = ({ navigation, route }) => {
 
   const saveRoutine = async () => {
     if (!routineName.trim()) {
-      alert('Please enter a routine name');
+      Alert.alert('Missing information', 'Please enter a routine name');
       return;
     }
 
     if (selectedExercises.length === 0) {
-      alert('Please add at least one exercise');
+      Alert.alert('Missing exercises', 'Please add at least one exercise');
       return;
     }
 
@@ -123,24 +117,21 @@ const CreateRoutineScreen = ({ navigation, route }) => {
         name: routineName,
         description: description,
         icon: selectedIcon,
-        exercise_ids: selectedExercises.map(e => e.id),
+        exercise_ids: selectedExercises.map((e) => e.id),
       };
 
       console.log('Saving routine:', routineData);
       const response = await workoutAPI.createRoutine(routineData);
       console.log('Routine saved:', response.data);
 
-      // Navigate back - the UnifiedDashboardScreen will detect focus and refresh
       navigation.goBack();
-      
-      // Use setTimeout to ensure navigation completes before showing alert
-      // This allows the screen to refresh first
+
       setTimeout(() => {
         Alert.alert('Success', `Routine "${routineName}" created successfully!`);
       }, 500);
     } catch (error) {
       console.error('Error saving routine:', error);
-      alert('Failed to save routine. Please try again.');
+      Alert.alert('Error', 'Failed to save routine. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -278,24 +269,31 @@ const CreateRoutineScreen = ({ navigation, route }) => {
         transparent={true}
         onRequestClose={() => {
           setShowExercisePicker(false);
-          setSearchQuery(''); // Clear search when closing
+          setSearchQuery('');
         }}
       >
         <View style={globalStyles.modalContainer}>
           <View style={globalStyles.modalContent}>
             <View style={globalStyles.modalHeader}>
               <Text style={globalStyles.modalTitle}>Add Exercises</Text>
-              <TouchableOpacity onPress={() => {
-                setShowExercisePicker(false);
-                setSearchQuery(''); // Clear search when closing
-              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowExercisePicker(false);
+                  setSearchQuery('');
+                }}
+              >
                 <Icon name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
-              <Icon name="magnify" size={20} color={colors.textTertiary} style={styles.searchIcon} />
+              <Icon
+                name="magnify"
+                size={20}
+                color={colors.textTertiary}
+                style={styles.searchIcon}
+              />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search exercises..."
@@ -305,7 +303,10 @@ const CreateRoutineScreen = ({ navigation, route }) => {
                 autoFocus={false}
               />
               {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchButton}>
+                <TouchableOpacity
+                  onPress={() => setSearchQuery('')}
+                  style={styles.clearSearchButton}
+                >
                   <Icon name="close-circle" size={20} color={colors.textTertiary} />
                 </TouchableOpacity>
               )}
@@ -359,10 +360,12 @@ const CreateRoutineScreen = ({ navigation, route }) => {
 
             <View style={styles.modalFooter}>
               <Button
-                title={`Add ${selectedExercises.length} Exercise${selectedExercises.length !== 1 ? 's' : ''}`}
+                title={`Add ${selectedExercises.length} Exercise${
+                  selectedExercises.length !== 1 ? 's' : ''
+                }`}
                 onPress={() => {
                   setShowExercisePicker(false);
-                  setSearchQuery(''); // Clear search when closing
+                  setSearchQuery('');
                 }}
                 disabled={selectedExercises.length === 0}
               />
@@ -579,4 +582,5 @@ const styles = StyleSheet.create({
 });
 
 export default CreateRoutineScreen;
+
 
