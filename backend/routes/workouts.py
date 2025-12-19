@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy import func
 from models import db
 from models.workout import Workout, WorkoutExercise, ExerciseSet, Routine
 from datetime import datetime, timedelta
@@ -200,12 +201,31 @@ def create_routine():
     user_id = int(get_jwt_identity())
     data = request.get_json()
     
-    # Get exercise IDs from the request
-    exercise_ids = data.get('exercise_ids', [])
+    # Normalize routine name to title case (e.g., "Push day" instead of "push day" or "PUSH DAY")
+    routine_name = data.get('name', '').strip()
+    if not routine_name:
+        return jsonify({'error': 'Routine name is required'}), 400
+    
+    # Convert to title case (capitalize first letter of each word)
+    routine_name_normalized = routine_name.title()
+    
+    # Check for duplicate routine name (case-insensitive) for this user
+    existing_routine = Routine.query.filter(
+        Routine.user_id == user_id,
+        func.lower(Routine.name) == routine_name_normalized.lower()
+    ).first()
+    
+    if existing_routine:
+        return jsonify({
+            'error': f'A routine with the name "{existing_routine.name}" already exists'
+        }), 400
+    
+    # Get exercise IDs from the request and remove duplicates
+    exercise_ids = list(dict.fromkeys(data.get('exercise_ids', [])))  # Preserves order while removing duplicates
     
     routine = Routine(
         user_id=user_id,
-        name=data['name'],
+        name=routine_name_normalized,
         description=data.get('description'),
         icon=data.get('icon'),
         exercise_count=len(exercise_ids),
