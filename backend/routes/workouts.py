@@ -210,10 +210,13 @@ def create_routine():
     routine_name_normalized = routine_name.title()
     
     # Check for duplicate routine name (case-insensitive) for this user
-    existing_routine = Routine.query.filter(
-        Routine.user_id == user_id,
-        func.lower(Routine.name) == routine_name_normalized.lower()
-    ).first()
+    # Query all routines for this user and check case-insensitively
+    all_user_routines = Routine.query.filter_by(user_id=user_id).all()
+    existing_routine = None
+    for routine in all_user_routines:
+        if routine.name.lower() == routine_name_normalized.lower():
+            existing_routine = routine
+            break
     
     if existing_routine:
         return jsonify({
