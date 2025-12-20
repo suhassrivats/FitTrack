@@ -32,6 +32,7 @@ import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import MealPlannerScreen from './src/screens/MealPlannerScreen';
 import RecipesScreen from './src/screens/RecipesScreen';
 import NutritionStatsScreen from './src/screens/NutritionStatsScreen';
+import AddMealScreen from './src/screens/AddMealScreen';
 
 // Import API configuration
 import { setAuthToken } from './src/services/api';
@@ -277,6 +278,7 @@ export default function App() {
               <Stack.Screen name="EditAssignedWorkout" component={EditAssignedWorkoutScreen} />
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
               <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+              <Stack.Screen name="AddMeal" component={AddMealScreen} />
             </>
           )}
         </Stack.Navigator>

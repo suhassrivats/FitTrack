@@ -20,7 +20,7 @@
       "buildNumber": "2",
       "infoPlist": {
         "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized workout recommendations.",
-        "NSCameraUsageDescription": "This app needs access to your camera to take profile photos.",
+        "NSCameraUsageDescription": "This app needs access to your camera to scan product barcodes and take profile photos.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select profile photos."
       },
       "config": {
@@ -43,6 +43,14 @@
         "projectId": "4cbef1a6-db4e-475b-8813-f69f28571b1e"
       }
     },
-    "owner": "suhassrivats"
+    "owner": "suhassrivats",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow FitTrack to access your camera to scan product barcodes."
+        }
+      ]
+    ]
   }
 }

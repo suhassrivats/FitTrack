@@ -20,22 +20,16 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
   const [activeTab, setActiveTab] = useState(contextMode || 'workout'); // 'workout' or 'macros'
   const refreshWorkoutContentRef = useRef(null);
   
-  // Sync with context on mount (but never allow macros mode)
+  // Sync with context on mount
   useEffect(() => {
-    if (contextMode && contextMode !== activeTab && contextMode !== 'macros') {
+    if (contextMode && contextMode !== activeTab) {
       setActiveTab(contextMode);
-    }
-    // If somehow macros is set, reset to workout
-    if (activeTab === 'macros') {
-      setActiveTab('workout');
     }
   }, [contextMode]);
   
-  // Update global mode when tab changes (only if not macros, which is disabled)
+  // Update global mode when tab changes
   useEffect(() => {
-    if (activeTab !== 'macros') {
-      setActiveMode(activeTab);
-    }
+    setActiveMode(activeTab);
   }, [activeTab, setActiveMode]);
   const [userName, setUserName] = useState('');
 
@@ -119,17 +113,18 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
         </TouchableOpacity>
         
         <TouchableOpacity
-          style={[styles.tab, styles.tabDisabled]}
-          disabled={true}
+          style={[styles.tab, activeTab === 'macros' && styles.tabActive]}
+          onPress={() => setActiveTab('macros')}
         >
           <Icon 
             name="food-apple" 
             size={24} 
-            color={colors.textTertiary} 
+            color={activeTab === 'macros' ? colors.textPrimary : colors.textSecondary} 
           />
-          <Text style={[styles.tabLabel, styles.tabLabelDisabled]}>
+          <Text style={[styles.tabLabel, activeTab === 'macros' && styles.tabLabelActive]}>
             Macros Log
           </Text>
+          {activeTab === 'macros' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>
       </View>
 

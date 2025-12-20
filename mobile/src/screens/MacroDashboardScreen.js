@@ -363,8 +363,7 @@ const MacroDashboardScreen = ({ navigation }) => {
             <TouchableOpacity 
               style={styles.addFoodButton}
               onPress={() => {
-                // TODO: Navigate to add meal screen
-                // Placeholder alert removed after testing.
+                navigation.navigate('AddMeal', { date: selectedDate.toISOString().split('T')[0] });
               }}
             >
               <Text style={styles.addFoodButtonText}>Add Food</Text>
