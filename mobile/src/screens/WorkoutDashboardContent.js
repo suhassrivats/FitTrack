@@ -73,62 +73,65 @@ const WorkoutDashboardContent = ({ navigation, refreshRef }) => {
   }
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      {/* My Routines */}
-      <View style={[globalStyles.section, { paddingTop: 24 }]}>
-        <View style={globalStyles.sectionHeader}>
-          <Text style={globalStyles.sectionTitle}>My Routines</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('CreateRoutine')}>
-            <Text style={styles.seeAllButton}>+ Create</Text>
-          </TouchableOpacity>
-        </View>
-
-        {routines.length === 0 ? (
-          <View style={styles.emptyRoutines}>
-            <Icon name="clipboard-list-outline" size={48} color={colors.textTertiary} />
-            <Text style={styles.emptyRoutinesText}>No routines created yet</Text>
-            <TouchableOpacity
-              style={styles.createRoutineButton}
-              onPress={() => navigation.navigate('CreateRoutine')}
-            >
-              <Icon name="plus" size={18} color={colors.primary} />
-              <Text style={styles.createRoutineText}>Create Your First Routine</Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* My Routines */}
+        <View style={[globalStyles.section, { paddingTop: 24 }]}>
+          <View style={globalStyles.sectionHeader}>
+            <Text style={globalStyles.sectionTitle}>My Routines</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('CreateRoutine')}>
+              <Text style={styles.seeAllButton}>+ Create</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <>
-            {routines.map((routine, index) => (
-              <TouchableOpacity 
-                key={routine.id || index} 
-                style={styles.routineCard}
-                onPress={() => {
-                  navigation.navigate('LogWorkout', { 
-                    routineId: routine.id,
-                    routineName: routine.name 
-                  });
-                }}
+
+          {routines.length === 0 ? (
+            <View style={styles.emptyRoutines}>
+              <Icon name="clipboard-list-outline" size={48} color={colors.textTertiary} />
+              <Text style={styles.emptyRoutinesText}>No routines created yet</Text>
+              <TouchableOpacity
+                style={styles.createRoutineButton}
+                onPress={() => navigation.navigate('CreateRoutine')}
               >
-                <View style={styles.routineLeft}>
-                  <View style={styles.routineIcon}>
-                    <Icon name={routine.icon || 'dumbbell'} size={24} color={colors.primary} />
-                  </View>
-                  <View>
-                    <Text style={styles.routineName}>{routine.name}</Text>
-                    <Text style={styles.routineDetail}>
-                      {routine.exercise_count} Exercises
-                    </Text>
-                  </View>
-                </View>
-                <Icon name="chevron-right" size={24} color={colors.textTertiary} />
+                <Icon name="plus" size={18} color={colors.primary} />
+                <Text style={styles.createRoutineText}>Create Your First Routine</Text>
               </TouchableOpacity>
-            ))}
-          </>
-        )}
-      </View>
+            </View>
+          ) : (
+            <>
+              {routines.map((routine, index) => (
+                <TouchableOpacity 
+                  key={routine.id || index} 
+                  style={styles.routineCard}
+                  onPress={() => {
+                    navigation.navigate('LogWorkout', { 
+                      routineId: routine.id,
+                      routineName: routine.name 
+                    });
+                  }}
+                >
+                  <View style={styles.routineLeft}>
+                    <View style={styles.routineIcon}>
+                      <Icon name={routine.icon || 'dumbbell'} size={24} color={colors.primary} />
+                    </View>
+                    <View>
+                      <Text style={styles.routineName}>{routine.name}</Text>
+                      <Text style={styles.routineDetail}>
+                        {routine.exercise_count} Exercises
+                      </Text>
+                    </View>
+                  </View>
+                  <Icon name="chevron-right" size={24} color={colors.textTertiary} />
+                </TouchableOpacity>
+              ))}
+            </>
+          )}
+        </View>
 
-      <View style={{ height: 160 }} />
+        {/* Extra space so last card isn't hidden behind the fixed button */}
+        <View style={{ height: 160 }} />
+      </ScrollView>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button fixed to bottom */}
       <View style={styles.fabContainer}>
         <Button
           title="Start Cross-Training"
@@ -137,7 +140,7 @@ const WorkoutDashboardContent = ({ navigation, refreshRef }) => {
           style={styles.fab}
         />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

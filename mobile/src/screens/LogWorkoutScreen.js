@@ -219,6 +219,22 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   };
 
   const addExercise = (exercise) => {
+    // Check if exercise already exists (for regular exercises by ID, for custom by name)
+    const isDuplicate = exercises.some((ex) => {
+      if (exercise.is_custom) {
+        // For custom exercises, check by name (case-insensitive)
+        return ex.is_custom && ex.name.toLowerCase() === exercise.name.toLowerCase();
+      } else {
+        // For regular exercises, check by exercise_id
+        return ex.exercise_id === exercise.id;
+      }
+    });
+
+    if (isDuplicate) {
+      Alert.alert('Duplicate Exercise', 'This exercise is already in your workout.');
+      return;
+    }
+
     setExercises([
       ...exercises,
       {
@@ -242,6 +258,18 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   const handleCreateCustomExercise = () => {
     if (!customExerciseName.trim()) {
       Alert.alert('Error', 'Please enter an exercise name');
+      return;
+    }
+
+    // Check if custom exercise with same name already exists (case-insensitive)
+    const isDuplicate = exercises.some((ex) => 
+      ex.is_custom && ex.name.toLowerCase() === customExerciseName.trim().toLowerCase()
+    );
+
+    if (isDuplicate) {
+      Alert.alert('Duplicate Exercise', 'This exercise is already in your workout.');
+      setShowCustomExerciseModal(false);
+      setCustomExerciseName('');
       return;
     }
 

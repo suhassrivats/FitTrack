@@ -89,8 +89,10 @@ const CreateRoutineScreen = ({ navigation, route }) => {
   const toggleExercise = (exercise) => {
     const exists = selectedExercises.find((e) => e.id === exercise.id);
     if (exists) {
+      // Remove exercise if already selected
       setSelectedExercises(selectedExercises.filter((e) => e.id !== exercise.id));
     } else {
+      // Add exercise if not already selected (prevents duplicates)
       setSelectedExercises([...selectedExercises, exercise]);
     }
   };
@@ -113,11 +115,19 @@ const CreateRoutineScreen = ({ navigation, route }) => {
     try {
       setSaving(true);
 
+      // Format routine name to title case (e.g., "Push day")
+      const formattedName = routineName.trim().split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ');
+
+      // Remove duplicate exercise IDs while preserving order
+      const uniqueExerciseIds = [...new Set(selectedExercises.map((e) => e.id))];
+
       const routineData = {
-        name: routineName,
+        name: formattedName,
         description: description,
         icon: selectedIcon,
-        exercise_ids: selectedExercises.map((e) => e.id),
+        exercise_ids: uniqueExerciseIds,
       };
 
       console.log('Saving routine:', routineData);
@@ -127,11 +137,12 @@ const CreateRoutineScreen = ({ navigation, route }) => {
       navigation.goBack();
 
       setTimeout(() => {
-        Alert.alert('Success', `Routine "${routineName}" created successfully!`);
+        Alert.alert('Success', `Routine "${response.data.routine.name}" created successfully!`);
       }, 500);
     } catch (error) {
       console.error('Error saving routine:', error);
-      Alert.alert('Error', 'Failed to save routine. Please try again.');
+      const errorMessage = error.response?.data?.error || 'Failed to save routine. Please try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setSaving(false);
     }
