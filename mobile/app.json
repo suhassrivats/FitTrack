@@ -23,6 +23,7 @@
         "NSCameraUsageDescription": "This app needs access to your camera to scan product barcodes and take profile photos.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select profile photos."
       },
+      "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
       }

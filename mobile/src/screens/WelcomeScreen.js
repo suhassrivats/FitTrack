@@ -6,12 +6,23 @@ import {
   ImageBackground,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import Button from '../components/Button';
+import { useSocialAuth } from '../hooks/useSocialAuth';
 import colors from '../styles/colors';
 
 const WelcomeScreen = ({ navigation }) => {
+  const { signInWithGoogle, signInWithApple, loading, isAppleSignInAvailable } = useSocialAuth(
+    (response) => {
+      // Success callback - user is logged in
+      console.log('Social auth success:', response);
+      // Navigation will be handled by the auth context
+    }
+  );
   return (
     <View style={styles.container}>
       <View style={styles.gradient}>
@@ -80,9 +91,33 @@ const WelcomeScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton}>
-                <Icon name="google" size={24} color={colors.textPrimary} />
+              {/* Google Sign In */}
+              <TouchableOpacity 
+                style={styles.socialButton}
+                onPress={signInWithGoogle}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Icon name="google" size={24} color={colors.textPrimary} />
+                )}
               </TouchableOpacity>
+
+              {/* Apple Sign In - iOS only */}
+              {Platform.OS === 'ios' && isAppleSignInAvailable && (
+                <TouchableOpacity 
+                  style={styles.socialButton}
+                  onPress={signInWithApple}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Icon name="apple" size={24} color={colors.textPrimary} />
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </ScrollView>

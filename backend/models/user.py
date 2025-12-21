@@ -34,10 +34,12 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=True)  # Nullable for OAuth users
     full_name = db.Column(db.String(120))
     avatar_url = db.Column(db.String(255))
     role = db.Column(db.String(20), default='student')  # 'instructor' or 'student'
+    oauth_provider = db.Column(db.String(20), nullable=True)  # 'google', 'apple', or null
+    oauth_id = db.Column(db.String(255), nullable=True)  # OAuth provider's user ID
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -50,6 +52,8 @@ class User(db.Model):
     
     def check_password(self, password):
         """Check if the provided password matches the hash"""
+        if not self.password_hash:
+            return False  # OAuth users don't have passwords
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
     
     def to_dict(self):

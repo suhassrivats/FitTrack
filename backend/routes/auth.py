@@ -8,6 +8,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+import jwt as pyjwt
+import requests
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -286,4 +290,168 @@ def reset_password():
     db.session.commit()
     
     return jsonify({'message': 'Password reset successfully'}), 200
+
+@bp.route('/google', methods=['POST'])
+def google_auth():
+    """Authenticate with Google OAuth"""
+    data = request.get_json()
+    
+    if not data.get('id_token'):
+        return jsonify({'error': 'Google ID token is required'}), 400
+    
+    try:
+        # Verify the Google ID token
+        google_client_id = os.getenv('GOOGLE_CLIENT_ID')
+        if not google_client_id:
+            return jsonify({'error': 'Google OAuth not configured'}), 500
+        
+        id_info = id_token.verify_oauth2_token(
+            data['id_token'],
+            google_requests.Request(),
+            google_client_id
+        )
+        
+        # Extract user info
+        google_id = id_info['sub']
+        email = id_info.get('email')
+        name = id_info.get('name')
+        picture = id_info.get('picture')
+        
+        if not email:
+            return jsonify({'error': 'Email not provided by Google'}), 400
+        
+        # Check if user exists with this Google ID
+        user = User.query.filter_by(oauth_provider='google', oauth_id=google_id).first()
+        
+        if not user:
+            # Check if email already exists (regular account)
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                return jsonify({'error': 'An account with this email already exists. Please login with your password.'}), 409
+            
+            # Create new user
+            username = email.split('@')[0] + '_' + secrets.token_hex(4)
+            user = User(
+                email=email,
+                username=username,
+                full_name=name,
+                avatar_url=picture,
+                oauth_provider='google',
+                oauth_id=google_id,
+                role='student'
+            )
+            user.set_password(secrets.token_urlsafe(32))  # Set random password for OAuth users
+            
+            db.session.add(user)
+            db.session.commit()
+        
+        # Generate access token
+        access_token = create_access_token(identity=str(user.id))
+        
+        return jsonify({
+            'message': 'Authentication successful',
+            'user': user.to_dict(),
+            'access_token': access_token
+        }), 200
+        
+    except ValueError as e:
+        current_app.logger.error(f"Google OAuth error: {str(e)}")
+        return jsonify({'error': 'Invalid Google token'}), 401
+    except Exception as e:
+        current_app.logger.error(f"Google OAuth error: {str(e)}")
+        return jsonify({'error': 'Authentication failed'}), 500
+
+@bp.route('/apple', methods=['POST'])
+def apple_auth():
+    """Authenticate with Apple Sign In"""
+    data = request.get_json()
+    
+    if not data.get('id_token'):
+        return jsonify({'error': 'Apple ID token is required'}), 400
+    
+    try:
+        # For Apple Sign In, we need to verify the JWT token
+        # Apple's public keys are available at https://appleid.apple.com/auth/keys
+        
+        # Decode without verification first to get the header
+        unverified_header = pyjwt.get_unverified_header(data['id_token'])
+        
+        # Get Apple's public keys
+        keys_response = requests.get('https://appleid.apple.com/auth/keys')
+        apple_public_keys = keys_response.json()['keys']
+        
+        # Find the matching key
+        key = None
+        for k in apple_public_keys:
+            if k['kid'] == unverified_header['kid']:
+                key = pyjwt.algorithms.RSAAlgorithm.from_jwk(k)
+                break
+        
+        if not key:
+            return jsonify({'error': 'Could not find Apple public key'}), 401
+        
+        # Verify and decode the token
+        apple_bundle_id = os.getenv('APPLE_BUNDLE_ID', 'com.fittrack.mobile')
+        decoded_token = pyjwt.decode(
+            data['id_token'],
+            key=key,
+            algorithms=['RS256'],
+            audience=apple_bundle_id
+        )
+        
+        # Extract user info
+        apple_id = decoded_token['sub']
+        email = decoded_token.get('email')
+        
+        # On first sign in, Apple provides additional user data
+        user_data = data.get('user')  # This is sent by the client on first sign in
+        name = None
+        if user_data:
+            if user_data.get('fullName'):
+                full_name = user_data['fullName']
+                name = f"{full_name.get('givenName', '')} {full_name.get('familyName', '')}".strip()
+        
+        # Check if user exists with this Apple ID
+        user = User.query.filter_by(oauth_provider='apple', oauth_id=apple_id).first()
+        
+        if not user:
+            # Check if email already exists (if provided)
+            if email:
+                existing_user = User.query.filter_by(email=email).first()
+                if existing_user:
+                    return jsonify({'error': 'An account with this email already exists. Please login with your password.'}), 409
+            
+            # Create new user
+            # Apple doesn't always provide email, use apple_id as fallback
+            user_email = email if email else f"{apple_id}@privaterelay.appleid.com"
+            username = (email.split('@')[0] if email else f"apple_user") + '_' + secrets.token_hex(4)
+            
+            user = User(
+                email=user_email,
+                username=username,
+                full_name=name,
+                oauth_provider='apple',
+                oauth_id=apple_id,
+                role='student'
+            )
+            user.set_password(secrets.token_urlsafe(32))  # Set random password for OAuth users
+            
+            db.session.add(user)
+            db.session.commit()
+        
+        # Generate access token
+        access_token = create_access_token(identity=str(user.id))
+        
+        return jsonify({
+            'message': 'Authentication successful',
+            'user': user.to_dict(),
+            'access_token': access_token
+        }), 200
+        
+    except pyjwt.InvalidTokenError as e:
+        current_app.logger.error(f"Apple OAuth error: {str(e)}")
+        return jsonify({'error': 'Invalid Apple token'}), 401
+    except Exception as e:
+        current_app.logger.error(f"Apple OAuth error: {str(e)}")
+        return jsonify({'error': 'Authentication failed'}), 500
 
