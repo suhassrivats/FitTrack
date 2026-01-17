@@ -141,20 +141,6 @@ const StatisticsScreen = () => {
           </View>
         </View>
 
-        {/* Personal Records */}
-        <View style={globalStyles.section}>
-          <Text style={globalStyles.sectionTitle}>Personal Records</Text>
-          <View style={styles.recordCard}>
-            <View style={styles.recordItem}>
-              <Icon name="trophy" size={24} color={colors.primary} />
-              <View style={styles.recordInfo}>
-                <Text style={styles.recordValue}>Coming Soon</Text>
-                <Text style={styles.recordLabel}>Best Lifts & PRs</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
         <View style={{ height: 100 }} />
       </ScrollView>
     </View>

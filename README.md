@@ -1,4 +1,4 @@
-# FitTrack - Fitness Tracking Mobile App
+# ShredX - Fitness Tracking Mobile App
 
 A comprehensive fitness tracking application with workout logging and class management features. Built with Flask REST API backend and React Native frontend for iOS and Android.
 
@@ -265,7 +265,7 @@ When using Docker Compose, environment variables are configured in `docker-compo
 FLASK_ENV=development
 SECRET_KEY=dev-secret-key
 JWT_SECRET_KEY=dev-jwt-secret
-DATABASE_URL=sqlite:///instance/fittrack.db
+DATABASE_URL=sqlite:///instance/shredx.db
 DEV_MODE=true
 ```
 
@@ -274,7 +274,7 @@ DEV_MODE=true
 FLASK_ENV=production
 SECRET_KEY=<strong-random-key>
 JWT_SECRET_KEY=<strong-random-key>
-DATABASE_URL=postgresql://user:pass@host:5432/fittrack
+DATABASE_URL=postgresql://user:pass@host:5432/shredx
 DEV_MODE=false
 ```
 
@@ -297,12 +297,12 @@ export const API_URL = 'http://YOUR_IP:5000/api';
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Or manually:
-docker build -t fittrack-backend:production ./backend
+docker build -t shredx-backend:production ./backend
 docker run -d -p 5000:5000 \
   -e FLASK_ENV=production \
   -e SECRET_KEY=your-secret-key \
-  --name fittrack-api \
-  fittrack-backend:production
+  --name shredx-api \
+  shredx-backend:production
 ```
 
 **Environment Variables for Production:**
@@ -310,7 +310,7 @@ docker run -d -p 5000:5000 \
 FLASK_ENV=production
 SECRET_KEY=<strong-random-key>
 JWT_SECRET_KEY=<strong-random-key>
-DATABASE_URL=postgresql://user:pass@host:5432/fittrack  # Use PostgreSQL in production
+DATABASE_URL=postgresql://user:pass@host:5432/shredx  # Use PostgreSQL in production
 ```
 
 ### Mobile App
@@ -367,4 +367,4 @@ All documentation is available in the [`docs/`](docs/) directory:
 
 ---
 
-Built with ❤️ by the FitTrack Team
+Built with ❤️ by the ShredX Team

@@ -109,7 +109,7 @@ const RegisterScreen = ({ navigation }) => {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Icon name="dumbbell" size={40} color={colors.primary} />
-            <Text style={styles.logoText}>FitTrack</Text>
+            <Text style={styles.logoText}>ShredX</Text>
           </View>
           <Text style={styles.tagline}>Track Your Progress, Crush Your Goals.</Text>
 

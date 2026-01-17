@@ -118,7 +118,7 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
           {activeTab === 'workout' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>
         
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[styles.tab, styles.tabDisabled]}
           disabled={true}
         >
@@ -130,7 +130,7 @@ const UnifiedDashboardScreen = ({ navigation, route }) => {
           <Text style={[styles.tabLabel, styles.tabLabelDisabled]}>
             Macros Log
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Tab Content */}

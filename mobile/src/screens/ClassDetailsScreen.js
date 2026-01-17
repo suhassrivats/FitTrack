@@ -9,7 +9,10 @@ import {
   Alert,
   Modal,
   TextInput,
+  Share,
+  Platform,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { globalStyles } from '../styles/globalStyles';
@@ -283,6 +286,33 @@ const ClassDetailsScreen = ({ route, navigation }) => {
     );
   };
 
+  const handleCopyJoinCode = async () => {
+    if (classData?.join_code) {
+      await Clipboard.setStringAsync(classData.join_code);
+      Alert.alert('Copied!', 'Join code copied to clipboard', [{ text: 'OK' }]);
+    }
+  };
+
+  const handleShareJoinCode = async () => {
+    if (!classData?.join_code) return;
+
+    const shareMessage = `Join my ${classData.name} class on ShredX!\n\nClass Code: ${classData.join_code}\n\nUse this code in the ShredX app to join the class.`;
+
+    try {
+      const result = await Share.share({
+        message: shareMessage,
+        title: `Join ${classData.name}`,
+      });
+
+      if (result.action === Share.sharedAction) {
+        console.log('Shared successfully');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      Alert.alert('Error', 'Failed to share join code');
+    }
+  };
+
   if (loading) {
     return (
       <View style={globalStyles.container}>
@@ -344,11 +374,24 @@ const ClassDetailsScreen = ({ route, navigation }) => {
           {isInstructor && (
             <View style={styles.joinCodeContainer}>
               <Text style={styles.joinCodeLabel}>Join Code</Text>
-              <View style={styles.joinCodeBox}>
-                <Text style={styles.joinCode}>{classData.join_code}</Text>
+              <View style={styles.joinCodeRow}>
+                <TouchableOpacity 
+                  style={styles.joinCodeBox}
+                  onPress={handleCopyJoinCode}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.joinCode}>{classData.join_code}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.shareIconButton}
+                  onPress={handleShareJoinCode}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="share-variant" size={24} color={colors.primary} />
+                </TouchableOpacity>
               </View>
               <Text style={styles.joinCodeHelper}>
-                Share this code with students to join
+                Tap code to copy
               </Text>
             </View>
           )}
@@ -696,6 +739,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '600',
   },
+  joinCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   joinCodeBox: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 2,
@@ -709,6 +757,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.primary,
     letterSpacing: 4,
+  },
+  shareIconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   joinCodeHelper: {
     fontSize: 12,

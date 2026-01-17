@@ -19,7 +19,7 @@ const WelcomeScreen = ({ navigation }) => {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Icon name="dumbbell" size={48} color={colors.primary} />
-            <Text style={styles.logoText}>FitTrack</Text>
+            <Text style={styles.logoText}>ShredX</Text>
           </View>
 
           {/* Main Content */}

@@ -14,8 +14,12 @@ import Button from '../components/Button';
 import { workoutAPI } from '../services/api';
 import { styles } from '../styles/DashboardScreenStyles';
 
+const ROUTINES_PER_PAGE = 5;
+
 const WorkoutDashboardContent = ({ navigation, refreshRef }) => {
-  const [routines, setRoutines] = useState([]);
+  const [allRoutines, setAllRoutines] = useState([]);
+  const [displayedRoutines, setDisplayedRoutines] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   const loadWorkoutData = useCallback(async () => {
@@ -28,12 +32,17 @@ const WorkoutDashboardContent = ({ navigation, refreshRef }) => {
       console.log('Setting routines:', routinesData);
       console.log('Number of routines:', routinesData.length);
       console.log('First 3 routine names:', routinesData.slice(0, 3).map(r => r.name));
-      setRoutines(Array.isArray(routinesData) ? routinesData : []);
+      
+      const validRoutines = Array.isArray(routinesData) ? routinesData : [];
+      setAllRoutines(validRoutines);
+      setDisplayedRoutines(validRoutines.slice(0, ROUTINES_PER_PAGE));
+      setCurrentPage(1);
     } catch (error) {
       console.error('Error loading workout data:', error);
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
-      setRoutines([]); // Ensure we set empty array on error
+      setAllRoutines([]);
+      setDisplayedRoutines([]);
     } finally {
       setLoading(false);
     }
@@ -63,6 +72,15 @@ const WorkoutDashboardContent = ({ navigation, refreshRef }) => {
     }, [loadWorkoutData])
   );
 
+  const loadMore = () => {
+    const nextPage = currentPage + 1;
+    const endIndex = nextPage * ROUTINES_PER_PAGE;
+    setDisplayedRoutines(allRoutines.slice(0, endIndex));
+    setCurrentPage(nextPage);
+  };
+
+  const hasMore = displayedRoutines.length < allRoutines.length;
+
   if (loading) {
     return (
       <View style={[globalStyles.centerContent, { flex: 1, paddingTop: 50 }]}>
@@ -84,7 +102,7 @@ const WorkoutDashboardContent = ({ navigation, refreshRef }) => {
             </TouchableOpacity>
           </View>
 
-          {routines.length === 0 ? (
+          {allRoutines.length === 0 ? (
             <View style={styles.emptyRoutines}>
               <Icon name="clipboard-list-outline" size={48} color={colors.textTertiary} />
               <Text style={styles.emptyRoutinesText}>No routines created yet</Text>
@@ -98,7 +116,7 @@ const WorkoutDashboardContent = ({ navigation, refreshRef }) => {
             </View>
           ) : (
             <>
-              {routines.map((routine, index) => (
+              {displayedRoutines.map((routine, index) => (
                 <TouchableOpacity 
                   key={routine.id || index} 
                   style={styles.routineCard}
@@ -123,6 +141,16 @@ const WorkoutDashboardContent = ({ navigation, refreshRef }) => {
                   <Icon name="chevron-right" size={24} color={colors.textTertiary} />
                 </TouchableOpacity>
               ))}
+              
+              {hasMore && (
+                <TouchableOpacity 
+                  style={styles.loadMoreButton}
+                  onPress={loadMore}
+                >
+                  <Text style={styles.loadMoreText}>Load More</Text>
+                  <Icon name="chevron-down" size={20} color={colors.primary} />
+                </TouchableOpacity>
+              )}
             </>
           )}
         </View>

@@ -9,7 +9,9 @@ import {
   Modal,
   TextInput,
   Alert,
+  Share,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { globalStyles } from '../styles/globalStyles';
@@ -106,10 +108,35 @@ const ClassesScreen = ({ navigation }) => {
         description: classDescription,
       });
 
+      const joinCode = response.data.class.join_code;
+      const classNameCreated = response.data.class.name;
+
       Alert.alert(
-        'Success',
-        `Class created! Share code ${response.data.class.join_code} with students.`,
-        [{ text: 'OK', onPress: () => {} }]
+        'Class Created! 🎉',
+        `Your join code is: ${joinCode}\n\nShare this code with your students.`,
+        [
+          {
+            text: 'Copy Code',
+            onPress: async () => {
+              await Clipboard.setStringAsync(joinCode);
+              Alert.alert('Copied!', 'Join code copied to clipboard');
+            },
+          },
+          {
+            text: 'Share Code',
+            onPress: async () => {
+              try {
+                await Share.share({
+                  message: `Join my ${classNameCreated} class on ShredX!\n\nClass Code: ${joinCode}\n\nUse this code in the ShredX app to join the class.`,
+                  title: `Join ${classNameCreated}`,
+                });
+              } catch (error) {
+                console.error('Error sharing:', error);
+              }
+            },
+          },
+          { text: 'Done', style: 'cancel' },
+        ]
       );
       setCreateModalVisible(false);
       setClassName('');
