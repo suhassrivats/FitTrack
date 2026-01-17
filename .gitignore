@@ -35,6 +35,7 @@ mobile/.expo/
 mobile/.expo-shared/
 mobile/dist/
 mobile/ios/
+mobile/android/
 mobile/npm-debug.*
 mobile/*.jks
 mobile/*.p8
