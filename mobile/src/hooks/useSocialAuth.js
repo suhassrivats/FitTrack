@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
@@ -110,7 +110,7 @@ export const useSocialAuth = (onSuccess) => {
   const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
   
   // Check Apple Sign In availability on mount
-  React.useEffect(() => {
+  useEffect(() => {
     if (Platform.OS === 'ios') {
       AppleAuthentication.isAvailableAsync().then(setIsAppleSignInAvailable);
     }
