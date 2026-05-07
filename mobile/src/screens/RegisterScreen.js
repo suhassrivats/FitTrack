@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,20 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import colors from '../styles/colors';
 import { authAPI, setAuthToken } from '../services/api';
+import { GOOGLE_CLIENT_IDS } from '../config/google';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const RegisterScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -28,6 +34,63 @@ const RegisterScreen = ({ navigation }) => {
     role: 'student',
   });
   const [errors, setErrors] = useState({});
+
+  const [, googleResponse, promptGoogle] = Google.useIdTokenAuthRequest({
+    iosClientId: GOOGLE_CLIENT_IDS.ios || undefined,
+    androidClientId: GOOGLE_CLIENT_IDS.android || undefined,
+    webClientId: GOOGLE_CLIENT_IDS.web || undefined,
+  });
+
+  useEffect(() => {
+    if (!googleResponse) return;
+    if (googleResponse.type === 'success') {
+      const idToken =
+        googleResponse.params?.id_token || googleResponse.authentication?.idToken;
+      if (idToken) {
+        exchangeGoogleToken(idToken);
+      } else {
+        setGoogleLoading(false);
+        Alert.alert('Google sign-in failed', 'No ID token returned by Google.');
+      }
+    } else if (googleResponse.type === 'error') {
+      setGoogleLoading(false);
+      Alert.alert(
+        'Google sign-in failed',
+        googleResponse.error?.message || 'Unknown error.'
+      );
+    } else if (googleResponse.type === 'dismiss' || googleResponse.type === 'cancel') {
+      setGoogleLoading(false);
+    }
+  }, [googleResponse]);
+
+  const exchangeGoogleToken = async (idToken) => {
+    try {
+      const response = await authAPI.google({ id_token: idToken });
+      if (response.data.access_token) {
+        await AsyncStorage.setItem('authToken', response.data.access_token);
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+        setAuthToken(response.data.access_token);
+      }
+    } catch (error) {
+      const message =
+        error.response?.data?.error || 'Google sign-in failed. Please try again.';
+      Alert.alert('Error', message);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!GOOGLE_CLIENT_IDS.ios && !GOOGLE_CLIENT_IDS.android && !GOOGLE_CLIENT_IDS.web) {
+      Alert.alert(
+        'Not configured',
+        'Google client IDs are missing. Fill in mobile/src/config/google.js.'
+      );
+      return;
+    }
+    setGoogleLoading(true);
+    await promptGoogle();
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -250,9 +313,15 @@ const RegisterScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton}>
+              <TouchableOpacity
+                style={styles.socialButton}
+                onPress={handleGoogleSignIn}
+                disabled={googleLoading}
+              >
                 <Icon name="google" size={20} color={colors.textPrimary} />
-                <Text style={styles.socialButtonText}>Continue with Google</Text>
+                <Text style={styles.socialButtonText}>
+                  {googleLoading ? 'Signing in…' : 'Continue with Google'}
+                </Text>
               </TouchableOpacity>
             </View>
 

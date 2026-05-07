@@ -7,7 +7,7 @@ import { Platform } from 'react-native';
 // - iOS Simulator: 'http://localhost:5000/api'
 // - Android Emulator: 'http://10.0.2.2:5000/api'
 // - Physical Device: 'http://YOUR_IP:5000/api'
-const API_BASE_URL = 'https://fittrack-api.fly.dev/api';
+const API_BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5000/api';
 
 // Export for use in screens
 export const API_URL = API_BASE_URL;
@@ -70,6 +70,7 @@ export const setAuthToken = (token) => {
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  google: (data) => api.post('/auth/google', data),
   getCurrentUser: () => api.get('/auth/me'),
   changePassword: (data) => api.post('/auth/change-password', data),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),

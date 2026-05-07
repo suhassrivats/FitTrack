@@ -5,9 +5,12 @@ from models.user import User, PasswordResetToken
 import secrets
 import os
 import smtplib
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -143,6 +146,82 @@ def login():
         'user': user.to_dict(),
         'access_token': access_token
     }), 200
+
+def _unique_username_from_email(email):
+    """Derive a unique username from an email, suffixing on collision."""
+    base = re.sub(r'[^a-zA-Z0-9_]', '', email.split('@')[0]) or 'user'
+    base = base[:60]
+    candidate = base
+    suffix = 0
+    while User.query.filter_by(username=candidate).first():
+        suffix += 1
+        candidate = f"{base}{suffix}"
+    return candidate
+
+
+@bp.route('/google', methods=['POST'])
+def google_login():
+    """Sign in or sign up with a Google ID token from the mobile client."""
+    data = request.get_json() or {}
+    token = data.get('id_token')
+    if not token:
+        return jsonify({'error': 'id_token is required'}), 400
+
+    raw_ids = os.getenv('GOOGLE_OAUTH_CLIENT_IDS', '')
+    accepted_ids = [cid.strip() for cid in raw_ids.split(',') if cid.strip()]
+    if not accepted_ids:
+        return jsonify({'error': 'Google login is not configured on the server'}), 500
+
+    try:
+        claims = google_id_token.verify_oauth2_token(
+            token, google_requests.Request(), audience=None
+        )
+    except ValueError as e:
+        return jsonify({'error': f'Invalid Google token: {e}'}), 401
+
+    if claims.get('aud') not in accepted_ids:
+        return jsonify({'error': 'Token audience does not match a known client'}), 401
+    if claims.get('iss') not in ('accounts.google.com', 'https://accounts.google.com'):
+        return jsonify({'error': 'Token issuer is not Google'}), 401
+
+    sub = claims.get('sub')
+    email = (claims.get('email') or '').lower()
+    if not sub or not email:
+        return jsonify({'error': 'Google token missing sub or email'}), 400
+    if claims.get('email_verified') is False:
+        return jsonify({'error': 'Google email is not verified'}), 401
+
+    full_name = claims.get('name')
+    avatar_url = claims.get('picture')
+
+    user = User.query.filter_by(google_sub=sub).first()
+    if user is None:
+        user = User.query.filter_by(email=email).first()
+        if user is not None:
+            user.google_sub = sub
+            if not user.full_name and full_name:
+                user.full_name = full_name
+            if not user.avatar_url and avatar_url:
+                user.avatar_url = avatar_url
+        else:
+            user = User(
+                email=email,
+                username=_unique_username_from_email(email),
+                google_sub=sub,
+                full_name=full_name,
+                avatar_url=avatar_url,
+                role='student',
+            )
+            db.session.add(user)
+        db.session.commit()
+
+    access_token = create_access_token(identity=str(user.id))
+    return jsonify({
+        'message': 'Login successful',
+        'user': user.to_dict(),
+        'access_token': access_token,
+    }), 200
+
 
 @bp.route('/me', methods=['GET'])
 @jwt_required()

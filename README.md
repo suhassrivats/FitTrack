@@ -287,6 +287,42 @@ Configure in `mobile/src/services/api.js`:
 export const API_URL = 'http://YOUR_IP:5000/api';
 ```
 
+## Google Sign-In Setup
+
+The app supports "Continue with Google" via `expo-auth-session` on the mobile side and a backend `/api/auth/google` endpoint that verifies the Google ID token and issues a JWT. Existing email accounts are auto-linked when the Google email matches.
+
+### 1. Create OAuth clients in Google Cloud Console
+
+1. Create a project at [console.cloud.google.com](https://console.cloud.google.com/).
+2. **Auth Platform → Branding**: app name `ShredX`, support and contact emails.
+3. **Auth Platform → Audience**: User type `External`, then under **Test users** add every Google account that will sign in (Testing mode only allows listed users).
+4. **Auth Platform → Data Access**: add scopes `openid`, `userinfo.email`, `userinfo.profile`.
+5. **Auth Platform → Clients**: create two OAuth clients:
+   - **Web application** — Authorized redirect URI: `https://auth.expo.io/@<your-expo-username>/shredx-mobile`. Used by Expo's auth proxy in Expo Go.
+   - **iOS** — Bundle ID: `com.shredx.mobile`. Used in custom dev clients / TestFlight builds.
+   - (Android is optional until you build a standalone APK — the SHA-1 comes from your release keystore.)
+
+### 2. Wire IDs into the project
+
+**Backend** — add the accepted audiences (comma-separated) to `.env`:
+```bash
+GOOGLE_OAUTH_CLIENT_IDS=<web-client-id>,<ios-client-id>
+```
+Then `docker compose up -d` to reload.
+
+**Mobile** — paste the IDs into `mobile/src/config/google.js`:
+```javascript
+export const GOOGLE_CLIENT_IDS = {
+  ios: '<ios-client-id>',
+  android: '',
+  web: '<web-client-id>',
+};
+```
+Restart Metro to pick up the change.
+
+### 3. Test
+Tap **Continue with Google** on the welcome / register screen. The mobile client gets an ID token from Google, posts it to `/api/auth/google`, the backend verifies and finds-or-creates the user, returns the same JWT shape as `/login`.
+
 ## Building for Production
 
 ### Backend
