@@ -38,14 +38,14 @@
     "web": {
       "bundler": "webpack"
     },
-    "extra": {
-      "eas": {
-        "projectId": "4cbef1a6-db4e-475b-8813-f69f28571b1e"
-      }
-    },
     "owner": "suhassrivats",
     "plugins": [
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f379a8eb-2011-44db-80a8-3687fd055fd6"
+      }
+    }
   }
 }

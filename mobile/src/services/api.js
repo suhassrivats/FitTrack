@@ -1,13 +1,27 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-// Base API URL - using Fly.io deployment
-// For local development, you can change this back to:
-// - iOS Simulator: 'http://localhost:5000/api'
-// - Android Emulator: 'http://10.0.2.2:5000/api'
-// - Physical Device: 'http://YOUR_IP:5000/api'
-const API_BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5000/api';
+// Resolve the dev backend host from whatever Metro is serving on, so the
+// same code works on simulator (127.0.0.1), Android emulator (10.0.2.2),
+// and a physical device on LAN (192.168.x.y).
+function devApiBaseUrl() {
+  const debuggerHost =
+    Constants.expoConfig?.hostUri ||
+    Constants.expoGoConfig?.debuggerHost ||
+    Constants.manifest2?.extra?.expoGo?.debuggerHost ||
+    Constants.manifest?.debuggerHost;
+  const host = debuggerHost?.split(':')?.[0];
+  if (host) return `http://${host}:5000/api`;
+  return Platform.OS === 'android'
+    ? 'http://10.0.2.2:5000/api'
+    : 'http://localhost:5000/api';
+}
+
+const API_BASE_URL = __DEV__
+  ? devApiBaseUrl()
+  : 'https://fittrack-api.fly.dev/api';
 
 // Export for use in screens
 export const API_URL = API_BASE_URL;

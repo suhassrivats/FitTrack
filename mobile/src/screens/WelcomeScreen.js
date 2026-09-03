@@ -10,8 +10,10 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Button from '../components/Button';
 import colors from '../styles/colors';
+import useGoogleSignIn from '../hooks/useGoogleSignIn';
 
 const WelcomeScreen = ({ navigation }) => {
+  const { signIn: handleGoogleSignIn, loading: googleLoading } = useGoogleSignIn();
   return (
     <View style={styles.container}>
       <View style={styles.gradient}>
@@ -80,7 +82,11 @@ const WelcomeScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton}>
+              <TouchableOpacity
+                style={styles.socialButton}
+                onPress={handleGoogleSignIn}
+                disabled={googleLoading}
+              >
                 <Icon name="google" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
