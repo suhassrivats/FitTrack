@@ -24,9 +24,8 @@
           "coach"
         ],
         "releaseNotes": "Added \"Continue with Google\" sign-in.",
-        "supportUrl": "https://TODO-set-support-url.example.com",
-        "marketingUrl": "https://TODO-set-marketing-url.example.com",
-        "privacyPolicyUrl": "https://TODO-set-privacy-policy-url.example.com"
+        "supportUrl": "https://suhassrivats.github.io/shredX/support.html",
+        "privacyPolicyUrl": "https://suhassrivats.github.io/shredX/privacy.html"
       }
     },
     "advisory": {

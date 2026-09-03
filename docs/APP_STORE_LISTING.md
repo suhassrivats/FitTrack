@@ -39,13 +39,13 @@ Whether you're training solo or running a class full of students, ShredX keeps e
 fitness,workout,gym,tracker,strength training,personal trainer,fitness class,leaderboard,coach
 
 ## Support URL
-[ ] e.g. https://shredx.app/support — needs a real page
+https://suhassrivats.github.io/shredX/support.html (GitHub Pages, contact: suhassrivats@gmail.com)
 
 ## Marketing URL (optional)
-[ ] e.g. https://shredx.app
+None — no marketing site, field left blank.
 
 ## Privacy Policy URL (required — app collects account data, camera/photo access, and tracking)
-[ ] Not yet published — see stub below
+https://suhassrivats.github.io/shredX/privacy.html (GitHub Pages, live)
 
 ## Category
 Primary: Health & Fitness
