@@ -17,9 +17,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shredx.mobile",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
-        "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized workout recommendations.",
         "NSCameraUsageDescription": "This app needs access to your camera to take profile photos.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select profile photos."
       },
