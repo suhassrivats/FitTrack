@@ -15,7 +15,7 @@ Log workouts, join fitness classes, and track your progress — all in one app. 
 
 ShredX is a fitness tracking app for lifters, coaches, and fitness classes.
 
-Track every workout in detail — exercises, sets, reps, and weight — and watch your history and personal records build up over time. Built-in workout timers keep your sessions on pace, and an exercise library with instructions and videos takes the guesswork out of form.
+Track every workout in detail — exercises, sets, reps, and weight — and watch your history and personal records build up over time. Built-in workout timers keep your sessions on pace, and an exercise library with instructions takes the guesswork out of form.
 
 For coaches and instructors: create classes, invite students with a simple join code, and assign specific workouts and targets. Students log their actual performance, and everyone can see class leaderboards and completion tracking. It's built for gyms, bootcamps, and online coaching alike.
 
@@ -24,7 +24,7 @@ Your profile brings it all together with workout streaks, weekly analytics, and 
 KEY FEATURES
 • Log workouts with exercises, sets, reps, and weight
 • Build custom workout routines
-• Exercise library with instructions and videos
+• Exercise library with instructions
 • Workout timer and personal records
 • Create and join fitness classes with a join code
 • Assign and track workouts for students
