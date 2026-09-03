@@ -1,0 +1,62 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "ShredX",
+    "categories": ["HEALTH_AND_FITNESS", "SPORTS"],
+    "release": {
+      "automaticRelease": true
+    },
+    "info": {
+      "en-US": {
+        "title": "ShredX",
+        "subtitle": "Workouts, classes, progress",
+        "promoText": "Log workouts, join fitness classes, and track your progress — all in one app. Sign in with Google and pick up right where you left off.",
+        "description": "ShredX is a fitness tracking app for lifters, coaches, and fitness classes.\n\nTrack every workout in detail — exercises, sets, reps, and weight — and watch your history and personal records build up over time. Built-in workout timers keep your sessions on pace, and an exercise library with instructions and videos takes the guesswork out of form.\n\nFor coaches and instructors: create classes, invite students with a simple join code, and assign specific workouts and targets. Students log their actual performance, and everyone can see class leaderboards and completion tracking. It's built for gyms, bootcamps, and online coaching alike.\n\nYour profile brings it all together with workout streaks, weekly analytics, and consistency tracking, so you always know where you stand.\n\nKEY FEATURES\n• Log workouts with exercises, sets, reps, and weight\n• Build custom workout routines\n• Exercise library with instructions and videos\n• Workout timer and personal records\n• Create and join fitness classes with a join code\n• Assign and track workouts for students\n• Class leaderboards and progress tracking\n• Weekly analytics and streak tracking\n• Sign in with email or Google\n• kg/lbs unit support\n\nWhether you're training solo or running a class full of students, ShredX keeps everyone's progress in one place.",
+        "keywords": [
+          "fitness",
+          "workout",
+          "gym",
+          "tracker",
+          "strength training",
+          "personal trainer",
+          "fitness class",
+          "leaderboard",
+          "coach"
+        ],
+        "releaseNotes": "Added \"Continue with Google\" sign-in.",
+        "supportUrl": "https://TODO-set-support-url.example.com",
+        "marketingUrl": "https://TODO-set-marketing-url.example.com",
+        "privacyPolicyUrl": "https://TODO-set-privacy-policy-url.example.com"
+      }
+    },
+    "advisory": {
+      "ageRatingOverride": "NONE",
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "kidsAgeBand": null,
+      "koreaAgeRatingOverride": "NONE",
+      "lootBox": false,
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "unrestrictedWebAccess": false,
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "advertising": false,
+      "ageAssurance": false,
+      "ageRatingOverrideV2": "NONE",
+      "developerAgeRatingInfoUrl": null,
+      "gunsOrOtherWeapons": "NONE",
+      "healthOrWellnessTopics": false,
+      "messagingAndChat": false,
+      "parentalControls": false,
+      "userGeneratedContent": false
+    }
+  }
+}
